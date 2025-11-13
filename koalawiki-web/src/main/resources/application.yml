@@ -1,0 +1,103 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  # 启用响应压缩
+  compression:
+    enabled: true
+    mime-types:
+      - text/html
+      - text/css
+      - application/javascript
+      - application/json
+      - text/xml
+      - application/xml
+    min-response-size: 1024
+
+spring:
+  application:
+    name: opendeepwiki
+
+  # 数据源配置（默认使用H2内存数据库用于演示）
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:koalawiki;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+
+  # Flyway配置
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+    encoding: UTF-8
+    table: flyway_schema_history
+    sql-migration-suffixes: .sql
+
+  # H2控制台配置
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  # 静态资源配置
+  web:
+    resources:
+      # 静态资源位置
+      static-locations: classpath:/static/
+      # 静态资源路径模式
+      add-mappings: true
+      # 缓存配置
+      cache:
+        cachecontrol:
+          # HTML文件：不缓存（带版本的资源可以长缓存）
+          max-age: 0
+          must-revalidate: true
+        # 静态资源缓存（JS/CSS文件名带hash，可以长缓存）
+        period: 31536000
+
+  mvc:
+    # 静态资源路径模式
+    static-path-pattern: /**
+    # 抛出404异常（让SpaController处理）
+    throw-exception-if-no-handler-found: false
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    ai.opendw.koalawiki: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,flyway
+      # Actuator端点路径
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+
+# Git配置
+koalawiki:
+  git:
+    storage-path: ${GIT_STORAGE_PATH:/tmp/koalawiki/git}
+    max-depth: 0
+    timeout: 300000
+    cache-cleanup-days: 30

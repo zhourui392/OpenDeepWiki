@@ -1,0 +1,78 @@
+# Phase 3 AI配置
+# 使用环境变量配置敏感信息
+
+koalawiki:
+  # AI服务配置
+  ai:
+    # 基础配置 - Phase 3专注于OpenAI
+    provider: openai
+    api-key: ${OPENAI_API_KEY:sk-your-api-key-here}
+    endpoint: ${OPENAI_ENDPOINT:https://api.openai.com/v1}
+
+    # 模型配置 - 使用最新最强的模型
+    chat-model: ${CHAT_MODEL:gpt-4-turbo-preview}  # 使用GPT-4 Turbo获得最佳效果
+    analysis-model: ${ANALYSIS_MODEL:gpt-4-turbo-preview}
+    # 如果GPT-5发布，可以直接改为: gpt-5 或 gpt-5-turbo
+
+    # 请求配置
+    max-tokens: 4096  # GPT-4支持更大的token数
+    temperature: 0.7
+    top-p: 1.0
+    frequency-penalty: 0.0
+    presence-penalty: 0.0
+    timeout: 30000  # 30秒超时
+
+    # 性能优化
+    cache:
+      enabled: true
+      ttl: 3600  # 缓存1小时
+      max-size: 1000  # 最多缓存1000条
+
+    # 限流配置
+    rate-limit:
+      enabled: true
+      requests-per-minute: 20
+      tokens-per-minute: 40000
+
+    # 重试配置
+    retry:
+      max-attempts: 3
+      initial-interval: 1000  # 1秒
+      max-interval: 10000     # 10秒
+      multiplier: 2.0
+
+    # 成本控制
+    cost-control:
+      daily-limit: 100  # 每日最多100次调用
+      monthly-limit: 3000  # 每月最多3000次调用
+      alert-threshold: 0.8  # 达到80%时告警
+
+  # 访问日志配置
+  access-log:
+    enabled: true
+    batch-size: 100
+    flush-interval: 30000  # 30秒
+    retention-days: 90
+
+  # 统计配置
+  statistics:
+    enabled: true
+    daily-cron: "0 0 1 * * ?"  # 每天凌晨1点
+    weekly-cron: "0 0 1 ? * MON"  # 每周一凌晨1点
+
+# Spring配置
+spring:
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=1h
+
+  # 启用重试
+  retry:
+    enabled: true
+
+# 日志配置
+logging:
+  level:
+    ai.opendw.koalawiki.infra.ai: DEBUG
+    com.theokanning.openai: DEBUG
