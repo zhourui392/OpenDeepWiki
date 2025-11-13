@@ -9,6 +9,11 @@ package ai.opendw.koalawiki.domain.warehouse;
 public enum WarehouseSyncStatus {
 
     /**
+     * 待处理
+     */
+    PENDING("Pending", "待处理"),
+
+    /**
      * 同步中
      */
     IN_PROGRESS("InProgress", "同步中"),
@@ -17,6 +22,11 @@ public enum WarehouseSyncStatus {
      * 同步成功
      */
     SUCCESS("Success", "同步成功"),
+
+    /**
+     * 已取消
+     */
+    CANCELLED("Cancelled", "已取消"),
 
     /**
      * 同步失败

@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 18091
   servlet:
     context-path: /
   # 启用响应压缩
@@ -28,7 +28,7 @@ spring:
   # JPA配置
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: create-drop  # Auto create schema
     show-sql: true
     properties:
       hibernate:
@@ -37,7 +37,7 @@ spring:
 
   # Flyway配置
   flyway:
-    enabled: true
+    enabled: false  # Temporarily disabled
     locations: classpath:db/migration
     baseline-on-migrate: true
     validate-on-migrate: true

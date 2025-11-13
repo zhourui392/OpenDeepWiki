@@ -126,7 +126,7 @@ public class WarehouseSyncServiceImpl implements IWarehouseSyncService {
             syncRecord.setStatus(WarehouseSyncStatus.FAILED);
             syncRecord.setEndTime(new Date());
             syncRecord.setErrorMessage(e.getMessage());
-            syncRecord.setDuration(syncRecord.getEndTime().getTime() - syncRecord.getStartTime().getTime());
+            syncRecord.setDurationMs(syncRecord.getEndTime().getTime() - syncRecord.getStartTime().getTime());
             syncRecordRepository.save(syncRecord);
         } finally {
             // 从正在同步的任务缓存中移除
@@ -140,7 +140,7 @@ public class WarehouseSyncServiceImpl implements IWarehouseSyncService {
     @Transactional
     protected void updateSyncRecord(WarehouseSyncRecordEntity syncRecord, IWarehouseSyncExecutor.SyncExecutionResult result) {
         syncRecord.setEndTime(new Date());
-        syncRecord.setDuration(result.getDuration());
+        syncRecord.setDurationMs(result.getDuration());
 
         if (result.isSuccess()) {
             syncRecord.setStatus(WarehouseSyncStatus.SUCCESS);
@@ -224,10 +224,10 @@ public class WarehouseSyncServiceImpl implements IWarehouseSyncService {
             Optional<WarehouseSyncRecordEntity> record = syncRecordRepository.findById(recordId);
             if (record.isPresent()) {
                 WarehouseSyncRecordEntity entity = record.get();
-                entity.setStatus(WarehouseSyncStatus.FAILED);
+                entity.setStatus(WarehouseSyncStatus.CANCELLED);
                 entity.setEndTime(new Date());
                 entity.setErrorMessage("Sync cancelled by user");
-                entity.setDuration(entity.getEndTime().getTime() - entity.getStartTime().getTime());
+                entity.setDurationMs(entity.getEndTime().getTime() - entity.getStartTime().getTime());
                 syncRecordRepository.save(entity);
             }
 

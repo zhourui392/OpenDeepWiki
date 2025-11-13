@@ -122,6 +122,18 @@ public class WarehouseEntity extends BaseJpaEntity {
     @Column(columnDefinition = "TEXT")
     private String tags;
 
+    /**
+     * 仓库版本（Git commit ID）
+     */
+    @Column(length = 40)
+    private String version;
+
+    /**
+     * 错误消息
+     */
+    @Column(columnDefinition = "TEXT")
+    private String error;
+
     // Getters and Setters
 
     public String getName() {
@@ -258,5 +270,21 @@ public class WarehouseEntity extends BaseJpaEntity {
 
     public void setTags(String tags) {
         this.tags = tags;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
     }
 }

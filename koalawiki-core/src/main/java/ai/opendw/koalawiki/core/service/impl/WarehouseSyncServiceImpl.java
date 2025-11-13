@@ -26,13 +26,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 仓库同步服务实现
+ * 仓库同步服务实现 (Alternate Implementation - Disabled)
  *
  * @author OpenDeepWiki Team
  * @since 0.1.0
  */
 @Slf4j
-@Service
+// @Service  // Disabled to avoid bean conflict
 @RequiredArgsConstructor
 public class WarehouseSyncServiceImpl implements IWarehouseSyncService {
 
@@ -129,7 +129,7 @@ public class WarehouseSyncServiceImpl implements IWarehouseSyncService {
         statusInfo.setFailedCount(failureCount);
 
         // 获取最后成功的同步
-        syncRecordRepository.findFirstByWarehouseIdAndStatusOrderByCreatedAtDesc(
+        syncRecordRepository.findFirstByWarehouseIdAndStatusOrderByStartTimeDesc(
                 warehouseId, WarehouseSyncStatus.SUCCESS
         ).ifPresent(record -> {
             statusInfo.setLastSuccessSyncTime(record.getEndTime());
@@ -249,7 +249,7 @@ public class WarehouseSyncServiceImpl implements IWarehouseSyncService {
             syncRecordRepository.save(syncRecord);
 
             GitRepositoryInfo repoInfo = gitRepositoryManager.getOrCloneRepository(
-                    warehouse.getAddress(), credentials
+                    warehouse.getUrl(), credentials
             );
 
             syncRecord.setProgress(60);
@@ -265,7 +265,7 @@ public class WarehouseSyncServiceImpl implements IWarehouseSyncService {
                         commits.get(1).getCommitId(),
                         commits.get(0).getCommitId()
                 );
-                syncRecord.setFilesChanged(changedFiles.size());
+                syncRecord.setUpdatedFileCount(changedFiles.size());
             }
 
             syncRecord.setProgress(90);
@@ -320,11 +320,11 @@ public class WarehouseSyncServiceImpl implements IWarehouseSyncService {
      * 构建Git认证信息
      */
     private GitCredentials buildGitCredentials(WarehouseEntity warehouse) {
-        if (warehouse.getGitUserName() != null && warehouse.getGitPassword() != null) {
+        if (warehouse.getAuthUsername() != null && warehouse.getAuthPassword() != null) {
             GitCredentials credentials = new GitCredentials();
             credentials.setType(GitCredentials.CredentialType.HTTP_BASIC);
-            credentials.setUsername(warehouse.getGitUserName());
-            credentials.setPassword(warehouse.getGitPassword());
+            credentials.setUsername(warehouse.getAuthUsername());
+            credentials.setPassword(warehouse.getAuthPassword());
             return credentials;
         }
         return null;

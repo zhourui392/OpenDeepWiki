@@ -67,6 +67,17 @@ public class WarehouseSyncRecordEntity extends BaseJpaEntity {
     private String errorMessage;
 
     /**
+     * 错误堆栈（同步失败时）
+     */
+    @Column(columnDefinition = "TEXT")
+    private String errorStack;
+
+    /**
+     * 同步进度（0-100）
+     */
+    private Integer progress;
+
+    /**
      * 总文件数
      */
     private Integer fileCount;
@@ -96,7 +107,7 @@ public class WarehouseSyncRecordEntity extends BaseJpaEntity {
     /**
      * 同步耗时（毫秒）
      */
-    private Long duration;
+    private Long durationMs;
 
     /**
      * 同步详情（JSON格式）
@@ -162,6 +173,22 @@ public class WarehouseSyncRecordEntity extends BaseJpaEntity {
         this.errorMessage = errorMessage;
     }
 
+    public String getErrorStack() {
+        return errorStack;
+    }
+
+    public void setErrorStack(String errorStack) {
+        this.errorStack = errorStack;
+    }
+
+    public Integer getProgress() {
+        return progress;
+    }
+
+    public void setProgress(Integer progress) {
+        this.progress = progress;
+    }
+
     public Integer getFileCount() {
         return fileCount;
     }
@@ -202,12 +229,12 @@ public class WarehouseSyncRecordEntity extends BaseJpaEntity {
         this.trigger = trigger;
     }
 
-    public Long getDuration() {
-        return duration;
+    public Long getDurationMs() {
+        return durationMs;
     }
 
-    public void setDuration(Long duration) {
-        this.duration = duration;
+    public void setDurationMs(Long durationMs) {
+        this.durationMs = durationMs;
     }
 
     public String getDetails() {

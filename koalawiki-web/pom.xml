@@ -51,64 +51,13 @@
         <artifactId>spring-boot-maven-plugin</artifactId>
         <version>${spring.boot.version}</version>
         <configuration>
-          <mainClass>ai.opendw.koalawiki.web.Application</mainClass>
+          <mainClass>ai.opendw.koalawiki.web.OpenDeepWikiApplication</mainClass>
         </configuration>
         <executions>
           <execution>
             <goals>
               <goal>repackage</goal>
             </goals>
-          </execution>
-        </executions>
-      </plugin>
-
-      <!-- Frontend Maven Plugin -->
-      <plugin>
-        <groupId>com.github.eirslett</groupId>
-        <artifactId>frontend-maven-plugin</artifactId>
-        <version>1.15.0</version>
-        <configuration>
-          <!-- 前端项目目录 -->
-          <workingDirectory>${project.basedir}/../../web-site</workingDirectory>
-          <!-- Node和npm安装目录 -->
-          <installDirectory>${project.build.directory}/frontend</installDirectory>
-        </configuration>
-        <executions>
-          <!-- 1. 安装Node.js和npm -->
-          <execution>
-            <id>install node and npm</id>
-            <goals>
-              <goal>install-node-and-npm</goal>
-            </goals>
-            <phase>generate-resources</phase>
-            <configuration>
-              <nodeVersion>v20.10.0</nodeVersion>
-              <npmVersion>10.2.3</npmVersion>
-            </configuration>
-          </execution>
-
-          <!-- 2. 安装前端依赖 -->
-          <execution>
-            <id>npm install</id>
-            <goals>
-              <goal>npm</goal>
-            </goals>
-            <phase>generate-resources</phase>
-            <configuration>
-              <arguments>install</arguments>
-            </configuration>
-          </execution>
-
-          <!-- 3. 构建前端 -->
-          <execution>
-            <id>npm run build</id>
-            <goals>
-              <goal>npm</goal>
-            </goals>
-            <phase>generate-resources</phase>
-            <configuration>
-              <arguments>run build</arguments>
-            </configuration>
           </execution>
         </executions>
       </plugin>

@@ -20,14 +20,24 @@ public enum WarehouseStatus {
     COMPLETED((byte) 2, "已完成"),
 
     /**
+     * 就绪
+     */
+    READY((byte) 3, "就绪"),
+
+    /**
      * 已取消
      */
-    CANCELED((byte) 3, "已取消"),
+    CANCELED((byte) 4, "已取消"),
 
     /**
      * 未授权
      */
-    UNAUTHORIZED((byte) 4, "未授权"),
+    UNAUTHORIZED((byte) 5, "未授权"),
+
+    /**
+     * 错误
+     */
+    ERROR((byte) 98, "错误"),
 
     /**
      * 已失败
