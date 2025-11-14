@@ -32,8 +32,9 @@ x86/
 bld/
 [Bb]in/
 [Oo]bj/
-[Ll]og/
-[Ll]ogs/
+# Don't ignore Java log packages - only ignore root level log directories
+/[Ll]og/
+/[Ll]ogs/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
