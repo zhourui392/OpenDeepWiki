@@ -15,17 +15,17 @@ import java.util.Date;
 @Entity
 @Table(name = "warehouse_sync_records",
     indexes = {
-        @Index(name = "idx_sync_records_warehouse_id", columnList = "warehouseId"),
+        @Index(name = "idx_sync_records_warehouse_id", columnList = "warehouse_id"),
         @Index(name = "idx_sync_records_status", columnList = "status"),
-        @Index(name = "idx_sync_records_start_time", columnList = "startTime"),
-        @Index(name = "idx_sync_records_warehouse_status", columnList = "warehouseId,status")
+        @Index(name = "idx_sync_records_start_time", columnList = "start_time"),
+        @Index(name = "idx_sync_records_warehouse_status", columnList = "warehouse_id,status")
     })
 public class WarehouseSyncRecordEntity extends BaseJpaEntity {
 
     /**
      * 仓库ID
      */
-    @Column(nullable = false, length = 50)
+    @Column(name = "warehouse_id", nullable = false, length = 50)
     private String warehouseId;
 
     /**
@@ -38,7 +38,7 @@ public class WarehouseSyncRecordEntity extends BaseJpaEntity {
     /**
      * 同步开始时间
      */
-    @Column(nullable = false)
+    @Column(name = "start_time", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date startTime;
 

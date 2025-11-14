@@ -28,7 +28,7 @@ public interface WarehouseRepository extends JpaRepository<WarehouseEntity, Stri
      * @param pageable 分页参数
      * @return 仓库分页
      */
-    Page<WarehouseEntity> findByUserIdOrderByCreatedTimeDesc(String userId, Pageable pageable);
+    Page<WarehouseEntity> findByUserIdOrderByCreatedAtDesc(String userId, Pageable pageable);
 
     /**
      * 根据状态查询仓库列表
@@ -37,7 +37,7 @@ public interface WarehouseRepository extends JpaRepository<WarehouseEntity, Stri
      * @param pageable 分页参数
      * @return 仓库分页
      */
-    Page<WarehouseEntity> findByStatusOrderByCreatedTimeDesc(WarehouseStatus status, Pageable pageable);
+    Page<WarehouseEntity> findByStatusOrderByCreatedAtDesc(WarehouseStatus status, Pageable pageable);
 
     /**
      * 查询公开的仓库

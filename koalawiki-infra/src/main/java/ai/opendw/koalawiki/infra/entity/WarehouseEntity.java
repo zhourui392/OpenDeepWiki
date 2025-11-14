@@ -16,7 +16,7 @@ import java.util.Date;
 @Table(name = "warehouses",
     indexes = {
         @Index(name = "idx_warehouse_status", columnList = "status"),
-        @Index(name = "idx_warehouse_user_id", columnList = "userId"),
+        @Index(name = "idx_warehouse_user_id", columnList = "user_id"),
         @Index(name = "idx_warehouse_created_at", columnList = "created_at")
     })
 public class WarehouseEntity extends BaseJpaEntity {
@@ -56,7 +56,7 @@ public class WarehouseEntity extends BaseJpaEntity {
     /**
      * 创建用户ID
      */
-    @Column(nullable = false, length = 50)
+    @Column(name = "user_id", nullable = false, length = 50)
     private String userId;
 
     /**

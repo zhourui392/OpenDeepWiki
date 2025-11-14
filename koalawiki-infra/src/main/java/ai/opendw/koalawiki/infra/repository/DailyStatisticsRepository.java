@@ -91,14 +91,15 @@ public interface DailyStatisticsRepository extends JpaRepository<DailyStatistics
      * 查询最近N天的统计数据
      *
      * @param warehouseId 仓库ID
-     * @param days 天数
+     * @param startDate 开始日期（N天前）
      * @return 统计数据列表
      */
     @Query("SELECT d FROM DailyStatisticsEntity d WHERE d.warehouseId = :warehouseId " +
+           "AND d.statisticsDate >= :startDate " +
            "ORDER BY d.statisticsDate DESC")
     List<DailyStatisticsEntity> findRecentStatistics(
             @Param("warehouseId") String warehouseId,
-            @Param("days") Integer days);
+            @Param("startDate") Date startDate);
 
     /**
      * 计算时间范围内的总PV
