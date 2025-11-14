@@ -1,5 +1,6 @@
 package ai.opendw.koalawiki.app.service.catalog;
 
+import ai.opendw.koalawiki.app.service.DocumentCatalogServiceImpl;
 import ai.opendw.koalawiki.domain.document.DocumentCatalog;
 import ai.opendw.koalawiki.infra.entity.DocumentCatalogEntity;
 import ai.opendw.koalawiki.infra.repository.DocumentCatalogRepository;

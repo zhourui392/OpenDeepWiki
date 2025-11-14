@@ -1,5 +1,6 @@
 package ai.opendw.koalawiki.app.service;
 
+import ai.opendw.koalawiki.app.service.impl.StatisticsServiceImpl;
 import ai.opendw.koalawiki.domain.log.AccessLog;
 import ai.opendw.koalawiki.domain.log.ActionType;
 import ai.opendw.koalawiki.domain.log.DailyStatistics;
