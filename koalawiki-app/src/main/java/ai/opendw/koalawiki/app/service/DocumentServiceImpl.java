@@ -10,6 +10,7 @@ import ai.opendw.koalawiki.domain.document.DocumentFileItem;
 import ai.opendw.koalawiki.domain.warehouse.Warehouse;
 import ai.opendw.koalawiki.domain.warehouse.WarehouseStatus;
 import ai.opendw.koalawiki.infra.entity.DocumentCatalogEntity;
+import ai.opendw.koalawiki.infra.entity.DocumentEntity;
 import ai.opendw.koalawiki.infra.entity.DocumentFileItemEntity;
 import ai.opendw.koalawiki.infra.repository.DocumentCatalogRepository;
 import ai.opendw.koalawiki.infra.repository.DocumentFileItemRepository;
@@ -85,7 +86,8 @@ public class DocumentServiceImpl implements IDocumentService {
 
                 // 更新文档状态
                 document.setStatus(WarehouseStatus.COMPLETED);
-                documentRepository.save(document);
+                DocumentEntity entity = convertToDocumentEntity(document);
+                documentRepository.save(entity);
 
                 processingStatusMap.put(documentId, DocumentProcessingStatus.COMPLETED);
 
@@ -322,12 +324,15 @@ public class DocumentServiceImpl implements IDocumentService {
     public boolean reprocessDocument(String documentId) {
         log.info("重新处理文档: documentId={}", documentId);
 
-        Document document = documentRepository.findById(documentId)
+        DocumentEntity entity = documentRepository.findById(documentId)
                 .orElseThrow(() -> new RuntimeException("文档不存在: " + documentId));
+
+        Document document = convertToDocument(entity);
 
         // 重置状态
         document.setStatus(WarehouseStatus.PENDING);
-        documentRepository.save(document);
+        entity = convertToDocumentEntity(document);
+        documentRepository.save(entity);
         processingStatusMap.put(documentId, DocumentProcessingStatus.PENDING);
 
         // TODO: 触发重新处理
@@ -414,5 +419,36 @@ public class DocumentServiceImpl implements IDocumentService {
             catalogs.add(convertToDocumentCatalog(entity));
         }
         return catalogs;
+    }
+
+    /**
+     * Document 和 DocumentEntity 之间的转换方法
+     */
+    private Document convertToDocument(DocumentEntity entity) {
+        Document document = new Document();
+        document.setId(entity.getId());
+        document.setWarehouseId(entity.getWarehouseId());
+        document.setLastUpdate(entity.getLastUpdate());
+        document.setDescription(entity.getDescription());
+        document.setLikeCount(entity.getLikeCount());
+        document.setCommentCount(entity.getCommentCount());
+        document.setGitPath(entity.getGitPath());
+        document.setStatus(entity.getStatus());
+        document.setCreatedAt(entity.getCreatedAt());
+        return document;
+    }
+
+    private DocumentEntity convertToDocumentEntity(Document document) {
+        DocumentEntity entity = new DocumentEntity();
+        entity.setId(document.getId());
+        entity.setWarehouseId(document.getWarehouseId());
+        entity.setLastUpdate(document.getLastUpdate());
+        entity.setDescription(document.getDescription());
+        entity.setLikeCount(document.getLikeCount());
+        entity.setCommentCount(document.getCommentCount());
+        entity.setGitPath(document.getGitPath());
+        entity.setStatus(document.getStatus());
+        entity.setCreatedAt(document.getCreatedAt());
+        return entity;
     }
 }

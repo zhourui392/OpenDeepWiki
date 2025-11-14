@@ -41,6 +41,12 @@ public class OpenAIClient implements IAIClient {
 
     @PostConstruct
     public void init() {
+        // 如果没有配置API key，跳过初始化
+        if (aiProperties.getApiKey() == null || aiProperties.getApiKey().trim().isEmpty()) {
+            log.warn("OpenAI API key未配置，跳过OpenAI客户端初始化。如需使用AI功能，请配置 koalawiki.ai.api-key");
+            return;
+        }
+
         log.info("初始化OpenAI客户端, 模型: {}, 端点: {}",
                 aiProperties.getChatModel(), aiProperties.getEndpoint());
 
@@ -108,6 +114,10 @@ public class OpenAIClient implements IAIClient {
             backoff = @Backoff(delay = 1000, multiplier = 2.0, maxDelay = 10000)
     )
     public String chat(List<ChatMessage> messages, Map<String, Object> options) {
+        if (openAiService == null) {
+            throw new AIException("OpenAI客户端未初始化，请配置 API key");
+        }
+
         log.debug("调用OpenAI chat, 消息数: {}", messages.size());
 
         try {
@@ -164,6 +174,9 @@ public class OpenAIClient implements IAIClient {
 
     @Override
     public boolean isAvailable() {
+        if (openAiService == null) {
+            return false;
+        }
         try {
             // 简单的健康检查
             String result = complete("test", null);
