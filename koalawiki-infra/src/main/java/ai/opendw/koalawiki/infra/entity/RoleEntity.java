@@ -13,7 +13,7 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "roles", indexes = {
-    @Index(name = "idx_name", columnList = "name")
+    @Index(name = "idx_role_name", columnList = "name")
 })
 public class RoleEntity extends BaseJpaEntity {
 

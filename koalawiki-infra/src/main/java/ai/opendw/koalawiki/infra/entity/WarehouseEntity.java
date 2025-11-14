@@ -15,9 +15,9 @@ import java.util.Date;
 @Entity
 @Table(name = "warehouses",
     indexes = {
-        @Index(name = "idx_status", columnList = "status"),
-        @Index(name = "idx_user_id", columnList = "userId"),
-        @Index(name = "idx_created_time", columnList = "createdTime")
+        @Index(name = "idx_warehouse_status", columnList = "status"),
+        @Index(name = "idx_warehouse_user_id", columnList = "userId"),
+        @Index(name = "idx_warehouse_created_at", columnList = "created_at")
     })
 public class WarehouseEntity extends BaseJpaEntity {
 

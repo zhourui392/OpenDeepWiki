@@ -15,10 +15,10 @@ import java.util.Date;
 @Entity
 @Table(name = "warehouse_sync_records",
     indexes = {
-        @Index(name = "idx_warehouse_id", columnList = "warehouseId"),
-        @Index(name = "idx_status", columnList = "status"),
-        @Index(name = "idx_start_time", columnList = "startTime"),
-        @Index(name = "idx_warehouse_status", columnList = "warehouseId,status")
+        @Index(name = "idx_sync_records_warehouse_id", columnList = "warehouseId"),
+        @Index(name = "idx_sync_records_status", columnList = "status"),
+        @Index(name = "idx_sync_records_start_time", columnList = "startTime"),
+        @Index(name = "idx_sync_records_warehouse_status", columnList = "warehouseId,status")
     })
 public class WarehouseSyncRecordEntity extends BaseJpaEntity {
 

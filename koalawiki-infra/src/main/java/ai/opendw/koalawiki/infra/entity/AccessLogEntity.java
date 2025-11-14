@@ -16,11 +16,11 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "access_log", indexes = {
-        @Index(name = "idx_warehouse_id", columnList = "warehouse_id"),
-        @Index(name = "idx_user_id", columnList = "user_id"),
-        @Index(name = "idx_access_time", columnList = "access_time"),
-        @Index(name = "idx_action", columnList = "action"),
-        @Index(name = "idx_warehouse_access_time", columnList = "warehouse_id,access_time")
+        @Index(name = "idx_accesslog_warehouse_id", columnList = "warehouse_id"),
+        @Index(name = "idx_accesslog_user_id", columnList = "user_id"),
+        @Index(name = "idx_accesslog_access_time", columnList = "access_time"),
+        @Index(name = "idx_accesslog_action", columnList = "action"),
+        @Index(name = "idx_accesslog_warehouse_access_time", columnList = "warehouse_id,access_time")
 })
 public class AccessLogEntity extends BaseJpaEntity {
 

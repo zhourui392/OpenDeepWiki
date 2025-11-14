@@ -13,8 +13,8 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "users", indexes = {
-    @Index(name = "idx_email", columnList = "email"),
-    @Index(name = "idx_created_at", columnList = "created_at")
+    @Index(name = "idx_user_email", columnList = "email"),
+    @Index(name = "idx_user_created_at", columnList = "created_at")
 })
 public class UserEntity extends BaseJpaEntity {
 

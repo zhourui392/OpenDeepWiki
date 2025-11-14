@@ -17,10 +17,10 @@ import java.util.Date;
 @Entity
 @Table(name = "daily_statistics", indexes = {
         @Index(name = "idx_statistics_date", columnList = "statistics_date"),
-        @Index(name = "idx_warehouse_id", columnList = "warehouse_id"),
-        @Index(name = "idx_warehouse_date", columnList = "warehouse_id,statistics_date")
+        @Index(name = "idx_daily_stats_warehouse_id", columnList = "warehouse_id"),
+        @Index(name = "idx_daily_stats_warehouse_date", columnList = "warehouse_id,statistics_date")
 }, uniqueConstraints = {
-        @UniqueConstraint(name = "uk_warehouse_date", columnNames = {"warehouse_id", "statistics_date"})
+        @UniqueConstraint(name = "uk_daily_stats_warehouse_date", columnNames = {"warehouse_id", "statistics_date"})
 })
 public class DailyStatisticsEntity extends BaseJpaEntity {
 
