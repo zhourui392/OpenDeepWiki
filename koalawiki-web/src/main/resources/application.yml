@@ -28,7 +28,7 @@ spring:
   # JPA配置
   jpa:
     hibernate:
-      ddl-auto: create-drop  # Auto create schema
+      ddl-auto: update  # Let Flyway manage schema
     show-sql: true
     properties:
       hibernate:
@@ -37,7 +37,7 @@ spring:
 
   # Flyway配置
   flyway:
-    enabled: false  # Temporarily disabled
+    enabled: false  # Disabled - using Hibernate DDL + DataInitializer for database migration
     locations: classpath:db/migration
     baseline-on-migrate: true
     validate-on-migrate: true
