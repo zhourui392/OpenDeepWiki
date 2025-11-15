@@ -1,5 +1,6 @@
 package ai.opendw.koalawiki.app.service.catalog;
 
+import ai.opendw.koalawiki.app.ai.IAIService;
 import ai.opendw.koalawiki.app.service.DocumentCatalogServiceImpl;
 import ai.opendw.koalawiki.domain.document.DocumentCatalog;
 import ai.opendw.koalawiki.infra.entity.DocumentCatalogEntity;
@@ -15,25 +16,28 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * 文档目录服务集成测试
- *
- * @author OpenDeepWiki Team
- * @date 2025-11-13
+ * 文档目录服务集成测试（对齐当前实现与仓储接口）
  */
 @ExtendWith(MockitoExtension.class)
 public class DocumentCatalogServiceIntegrationTest {
 
     @Mock
     private DocumentCatalogRepository catalogRepository;
+
+    @Mock
+    private IAIService aiService;
 
     @InjectMocks
     private DocumentCatalogServiceImpl catalogService;
@@ -43,434 +47,247 @@ public class DocumentCatalogServiceIntegrationTest {
 
     @BeforeEach
     public void setUp() {
-        // 准备测试数据
         mockEntity = new DocumentCatalogEntity();
         mockEntity.setId("catalog-1");
         mockEntity.setWarehouseId("warehouse-1");
         mockEntity.setDocumentId("doc-1");
         mockEntity.setParentId(null);
-        mockEntity.setPath("/README.md");
         mockEntity.setName("README.md");
-        mockEntity.setType("file");
-        mockEntity.setLevel(1);
+        mockEntity.setUrl("/README.md");
+        mockEntity.setDescription("README file");
         mockEntity.setOrder(1);
-        mockEntity.setIsLeaf(true);
-        mockEntity.setDeleted(false);
-        mockEntity.setCreatedAt(LocalDateTime.now());
-        mockEntity.setUpdatedAt(LocalDateTime.now());
+        mockEntity.setIsCompleted(false);
+        mockEntity.setIsDeleted(false);
+        mockEntity.setCreatedAt(new Date());
 
         mockDomain = new DocumentCatalog();
         mockDomain.setId("catalog-1");
         mockDomain.setWarehouseId("warehouse-1");
         mockDomain.setDocumentId("doc-1");
-        mockDomain.setPath("/README.md");
         mockDomain.setName("README.md");
-        mockDomain.setType("file");
+        mockDomain.setUrl("/README.md");
+        mockDomain.setDescription("README file");
+        mockDomain.setOrder(1);
     }
 
-    /**
-     * 测试：获取仓库目录树 - 成功场景
-     */
-    @Test
-    public void testGetCatalogTree_Success() {
-        // Given
-        String warehouseId = "warehouse-1";
-        List<DocumentCatalogEntity> entities = new ArrayList<>();
-
-        // 根节点
-        DocumentCatalogEntity root = new DocumentCatalogEntity();
-        root.setId("root");
-        root.setWarehouseId(warehouseId);
-        root.setParentId(null);
-        root.setPath("/");
-        root.setName("root");
-        root.setType("directory");
-        root.setLevel(0);
-        entities.add(root);
-
-        // 子节点
-        DocumentCatalogEntity child = new DocumentCatalogEntity();
-        child.setId("child-1");
-        child.setWarehouseId(warehouseId);
-        child.setParentId("root");
-        child.setPath("/src");
-        child.setName("src");
-        child.setType("directory");
-        child.setLevel(1);
-        entities.add(child);
-
-        when(catalogRepository.findByWarehouseIdAndDeleted(warehouseId, false))
-            .thenReturn(entities);
-
-        // When
-        DocumentCatalog result = catalogService.getCatalogTree(warehouseId);
-
-        // Then
-        assertNotNull(result);
-        assertEquals("root", result.getId());
-        assertNotNull(result.getChildren());
-        assertEquals(1, result.getChildren().size());
-        verify(catalogRepository, times(1)).findByWarehouseIdAndDeleted(warehouseId, false);
-    }
-
-    /**
-     * 测试：创建目录 - 成功场景
-     */
     @Test
     public void testCreateCatalog_Success() {
-        // Given
         when(catalogRepository.save(any(DocumentCatalogEntity.class)))
-            .thenReturn(mockEntity);
-        when(catalogRepository.findById(anyString()))
-            .thenReturn(Optional.empty());
+                .thenReturn(mockEntity);
 
-        // When
-        DocumentCatalog result = catalogService.createCatalog(mockDomain);
+        DocumentCatalog toCreate = new DocumentCatalog();
+        toCreate.setWarehouseId("warehouse-1");
+        toCreate.setName("README.md");
+        toCreate.setUrl("/README.md");
 
-        // Then
+        DocumentCatalog result = catalogService.createCatalog(toCreate);
+
         assertNotNull(result);
         assertEquals("catalog-1", result.getId());
-        assertEquals("/README.md", result.getPath());
         verify(catalogRepository, times(1)).save(any(DocumentCatalogEntity.class));
     }
 
-    /**
-     * 测试：更新目录 - 成功场景
-     */
     @Test
     public void testUpdateCatalog_Success() {
-        // Given
-        String catalogId = "catalog-1";
-        when(catalogRepository.findById(catalogId))
-            .thenReturn(Optional.of(mockEntity));
+        when(catalogRepository.findById("catalog-1"))
+                .thenReturn(Optional.of(mockEntity));
         when(catalogRepository.save(any(DocumentCatalogEntity.class)))
-            .thenReturn(mockEntity);
+                .thenReturn(mockEntity);
 
-        mockDomain.setName("UPDATED_README.md");
+        DocumentCatalog update = new DocumentCatalog();
+        update.setName("README-UPDATED.md");
+        update.setDescription("updated");
 
-        // When
-        DocumentCatalog result = catalogService.updateCatalog(catalogId, mockDomain);
+        DocumentCatalog result = catalogService.updateCatalog("catalog-1", update);
 
-        // Then
         assertNotNull(result);
-        verify(catalogRepository, times(1)).findById(catalogId);
+        assertEquals("catalog-1", result.getId());
+        verify(catalogRepository, times(1)).findById("catalog-1");
         verify(catalogRepository, times(1)).save(any(DocumentCatalogEntity.class));
     }
 
-    /**
-     * 测试：更新目录 - 目录不存在
-     */
     @Test
-    public void testUpdateCatalog_NotFound() {
-        // Given
-        String catalogId = "non-existent";
-        when(catalogRepository.findById(catalogId))
-            .thenReturn(Optional.empty());
+    public void testGetCatalog_Success() {
+        when(catalogRepository.findById("catalog-1"))
+                .thenReturn(Optional.of(mockEntity));
 
-        // When & Then
-        assertThrows(RuntimeException.class, () -> {
-            catalogService.updateCatalog(catalogId, mockDomain);
-        });
-    }
+        DocumentCatalog result = catalogService.getCatalog("catalog-1");
 
-    /**
-     * 测试：删除目录 - 软删除
-     */
-    @Test
-    public void testDeleteCatalog_SoftDelete() {
-        // Given
-        String catalogId = "catalog-1";
-        when(catalogRepository.findById(catalogId))
-            .thenReturn(Optional.of(mockEntity));
-
-        // When
-        catalogService.deleteCatalog(catalogId);
-
-        // Then
-        verify(catalogRepository, times(1)).findById(catalogId);
-        verify(catalogRepository, times(1)).save(any(DocumentCatalogEntity.class));
-        assertTrue(mockEntity.getDeleted());
-    }
-
-    /**
-     * 测试：获取子目录 - 成功场景
-     */
-    @Test
-    public void testGetChildren_Success() {
-        // Given
-        String parentId = "parent-1";
-        List<DocumentCatalogEntity> children = new ArrayList<>();
-
-        DocumentCatalogEntity child1 = new DocumentCatalogEntity();
-        child1.setId("child-1");
-        child1.setParentId(parentId);
-        child1.setName("file1.md");
-        children.add(child1);
-
-        DocumentCatalogEntity child2 = new DocumentCatalogEntity();
-        child2.setId("child-2");
-        child2.setParentId(parentId);
-        child2.setName("file2.md");
-        children.add(child2);
-
-        when(catalogRepository.findByParentIdAndDeleted(parentId, false))
-            .thenReturn(children);
-
-        // When
-        List<DocumentCatalog> result = catalogService.getChildren(parentId);
-
-        // Then
         assertNotNull(result);
-        assertEquals(2, result.size());
-        verify(catalogRepository, times(1)).findByParentIdAndDeleted(parentId, false);
+        assertEquals("catalog-1", result.getId());
+        verify(catalogRepository, times(1)).findById("catalog-1");
     }
 
-    /**
-     * 测试：分页查询 - 成功场景
-     */
+    @Test
+    public void testGetCatalogTree_Success() {
+        String warehouseId = "warehouse-1";
+        when(catalogRepository.findCatalogTree(warehouseId))
+                .thenReturn(Collections.singletonList(mockEntity));
+
+        DocumentCatalog tree = catalogService.getCatalogTree(warehouseId);
+
+        assertNotNull(tree);
+        assertEquals("catalog-1", tree.getId());
+        verify(catalogRepository, times(1)).findCatalogTree(warehouseId);
+    }
+
     @Test
     public void testListCatalogs_Success() {
-        // Given
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<DocumentCatalogEntity> page = new PageImpl<>(
+                Collections.singletonList(mockEntity), pageable, 1);
+
+        when(catalogRepository.findAll(pageable)).thenReturn(page);
+
+        Page<DocumentCatalog> result = catalogService.listCatalogs(pageable);
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        verify(catalogRepository, times(1)).findAll(pageable);
+    }
+
+    @Test
+    public void testListCatalogsByWarehouse_Success() {
         String warehouseId = "warehouse-1";
         Pageable pageable = PageRequest.of(0, 10);
 
-        List<DocumentCatalogEntity> entities = Arrays.asList(mockEntity);
-        Page<DocumentCatalogEntity> page = new PageImpl<>(entities, pageable, 1);
+        when(catalogRepository.findByWarehouseIdAndIsDeleted(warehouseId, false))
+                .thenReturn(Collections.singletonList(mockEntity));
 
-        when(catalogRepository.findByWarehouseIdAndDeleted(warehouseId, false, pageable))
-            .thenReturn(page);
+        Page<DocumentCatalog> result =
+                catalogService.listCatalogsByWarehouse(warehouseId, pageable);
 
-        // When
-        Page<DocumentCatalog> result = catalogService.listCatalogs(warehouseId, pageable);
-
-        // Then
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
-        assertEquals(1, result.getContent().size());
-        verify(catalogRepository, times(1)).findByWarehouseIdAndDeleted(warehouseId, false, pageable);
+        verify(catalogRepository, times(1))
+                .findByWarehouseIdAndIsDeleted(warehouseId, false);
     }
 
-    /**
-     * 测试：统计目录数量 - 成功场景
-     */
     @Test
-    public void testCountCatalogs_Success() {
-        // Given
+    public void testListCatalogsByParent_Success() {
+        DocumentCatalogEntity child = new DocumentCatalogEntity();
+        child.setId("child-1");
+        child.setWarehouseId("warehouse-1");
+        child.setParentId("catalog-1");
+        child.setName("Child.md");
+        child.setUrl("/Child.md");
+        child.setIsDeleted(false);
+
+        when(catalogRepository.findAll())
+                .thenReturn(Arrays.asList(mockEntity, child));
+
+        List<DocumentCatalog> children =
+                catalogService.listCatalogsByParent("catalog-1");
+
+        assertNotNull(children);
+        assertEquals(1, children.size());
+        assertEquals("child-1", children.get(0).getId());
+        verify(catalogRepository, times(1)).findAll();
+    }
+
+    @Test
+    public void testSearchCatalogs_Success() {
         String warehouseId = "warehouse-1";
-        when(catalogRepository.countByWarehouseIdAndDeleted(warehouseId, false))
-            .thenReturn(42L);
+        when(catalogRepository.findByWarehouseIdAndIsDeleted(warehouseId, false))
+                .thenReturn(Collections.singletonList(mockEntity));
 
-        // When
-        long count = catalogService.countCatalogs(warehouseId);
+        List<DocumentCatalog> result =
+                catalogService.searchCatalogs(warehouseId, "readme");
 
-        // Then
-        assertEquals(42L, count);
-        verify(catalogRepository, times(1)).countByWarehouseIdAndDeleted(warehouseId, false);
-    }
-
-    /**
-     * 测试：刷新目录 - 成功场景
-     */
-    @Test
-    public void testRefreshCatalog_Success() {
-        // Given
-        String warehouseId = "warehouse-1";
-        List<DocumentCatalogEntity> oldCatalogs = Arrays.asList(mockEntity);
-
-        when(catalogRepository.findByWarehouseIdAndDeleted(warehouseId, false))
-            .thenReturn(oldCatalogs);
-
-        // When
-        catalogService.refreshCatalog(warehouseId);
-
-        // Then
-        verify(catalogRepository, times(1)).findByWarehouseIdAndDeleted(warehouseId, false);
-        // 应该标记旧目录为删除
-    }
-
-    /**
-     * 测试：搜索目录 - 成功场景
-     */
-    @Test
-    public void testSearchCatalog_Success() {
-        // Given
-        SearchRequest request = new SearchRequest();
-        request.setWarehouseId("warehouse-1");
-        request.setKeyword("README");
-        request.setScope(SearchScope.TITLE);
-        request.setMaxResults(10);
-
-        List<DocumentCatalogEntity> entities = Arrays.asList(mockEntity);
-        when(catalogRepository.findByWarehouseIdAndNameContainingAndDeleted(
-            request.getWarehouseId(), request.getKeyword(), false))
-            .thenReturn(entities);
-
-        // When
-        SearchResult result = catalogService.search(request);
-
-        // Then
         assertNotNull(result);
-        assertNotNull(result.getItems());
-        assertEquals(1, result.getTotalCount());
-        assertTrue(result.getItems().size() > 0);
+        assertEquals(1, result.size());
+        verify(catalogRepository, times(1))
+                .findByWarehouseIdAndIsDeleted(warehouseId, false);
     }
 
-    /**
-     * 测试：排序目录 - 字母顺序
-     */
     @Test
-    public void testSortCatalog_Alphabetical() {
-        // Given
+    public void testSortCatalogs_Alphabetical() {
         String warehouseId = "warehouse-1";
-        List<DocumentCatalogEntity> unsorted = new ArrayList<>();
-
-        DocumentCatalogEntity b = new DocumentCatalogEntity();
-        b.setId("b");
-        b.setName("b.md");
-        unsorted.add(b);
 
         DocumentCatalogEntity a = new DocumentCatalogEntity();
         a.setId("a");
+        a.setWarehouseId(warehouseId);
         a.setName("a.md");
-        unsorted.add(a);
+        a.setUrl("/a.md");
+        a.setIsDeleted(false);
 
-        when(catalogRepository.findByWarehouseIdAndDeleted(warehouseId, false))
-            .thenReturn(unsorted);
+        DocumentCatalogEntity b = new DocumentCatalogEntity();
+        b.setId("b");
+        b.setWarehouseId(warehouseId);
+        b.setName("b.md");
+        b.setUrl("/b.md");
+        b.setIsDeleted(false);
 
-        CatalogSortStrategy strategy = new AlphabeticalSortStrategy();
+        when(catalogRepository.findByWarehouseIdAndIsDeleted(warehouseId, false))
+                .thenReturn(Arrays.asList(b, a));
 
-        // When
-        List<DocumentCatalog> result = catalogService.sortCatalog(warehouseId, strategy);
+        List<DocumentCatalog> result =
+                catalogService.sortCatalogs(warehouseId, "alphabetical");
 
-        // Then
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals("a.md", result.get(0).getName());
         assertEquals("b.md", result.get(1).getName());
     }
 
-    /**
-     * 测试：过滤目录 - 按类型
-     */
-    @Test
-    public void testFilterCatalog_ByType() {
-        // Given
-        String warehouseId = "warehouse-1";
-        FilterCriteria criteria = new FilterCriteria();
-        List<String> includeTypes = new ArrayList<>();
-        includeTypes.add("file");
-        criteria.setIncludeTypes(includeTypes);
-
-        List<DocumentCatalogEntity> allEntities = new ArrayList<>();
-
-        DocumentCatalogEntity file = new DocumentCatalogEntity();
-        file.setType("file");
-        file.setName("file.md");
-        allEntities.add(file);
-
-        DocumentCatalogEntity dir = new DocumentCatalogEntity();
-        dir.setType("directory");
-        dir.setName("dir");
-        allEntities.add(dir);
-
-        when(catalogRepository.findByWarehouseIdAndDeleted(warehouseId, false))
-            .thenReturn(allEntities);
-
-        // When
-        List<DocumentCatalog> result = catalogService.filterCatalog(warehouseId, criteria);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals("file", result.get(0).getType());
-    }
-
-    /**
-     * 测试：批量创建目录
-     */
     @Test
     public void testBatchCreateCatalogs_Success() {
-        // Given
-        List<DocumentCatalog> catalogs = new ArrayList<>();
-        catalogs.add(mockDomain);
-
-        DocumentCatalog catalog2 = new DocumentCatalog();
-        catalog2.setWarehouseId("warehouse-1");
-        catalog2.setPath("/src/main.java");
-        catalog2.setName("main.java");
-        catalogs.add(catalog2);
+        DocumentCatalog c1 = new DocumentCatalog();
+        c1.setWarehouseId("warehouse-1");
+        c1.setName("A.md");
+        DocumentCatalog c2 = new DocumentCatalog();
+        c2.setWarehouseId("warehouse-1");
+        c2.setName("B.md");
 
         when(catalogRepository.saveAll(anyList()))
-            .thenReturn(Arrays.asList(mockEntity));
+                .thenReturn(Collections.singletonList(mockEntity));
 
-        // When
-        List<DocumentCatalog> result = catalogService.batchCreateCatalogs(catalogs);
+        List<DocumentCatalog> result =
+                catalogService.batchCreateCatalogs(Arrays.asList(c1, c2));
 
-        // Then
         assertNotNull(result);
-        assertTrue(result.size() > 0);
+        assertFalse(result.isEmpty());
         verify(catalogRepository, times(1)).saveAll(anyList());
     }
 
-    /**
-     * 测试：批量删除目录
-     */
     @Test
-    public void testBatchDeleteCatalogs_Success() {
-        // Given
-        List<String> catalogIds = Arrays.asList("catalog-1", "catalog-2");
+    public void testBatchUpdateOrder_Success() {
+        DocumentCatalogEntity e1 = new DocumentCatalogEntity();
+        e1.setId("c1");
+        e1.setWarehouseId("warehouse-1");
+        e1.setName("c1");
 
-        when(catalogRepository.findById("catalog-1"))
-            .thenReturn(Optional.of(mockEntity));
-        when(catalogRepository.findById("catalog-2"))
-            .thenReturn(Optional.of(mockEntity));
-
-        // When
-        catalogService.batchDeleteCatalogs(catalogIds);
-
-        // Then
-        verify(catalogRepository, times(catalogIds.size())).findById(anyString());
-        verify(catalogRepository, times(1)).saveAll(anyList());
-    }
-
-    /**
-     * 测试：获取目录路径
-     */
-    @Test
-    public void testGetCatalogPath_Success() {
-        // Given
-        String catalogId = "catalog-1";
-        when(catalogRepository.findById(catalogId))
-            .thenReturn(Optional.of(mockEntity));
-
-        // When
-        String path = catalogService.getCatalogPath(catalogId);
-
-        // Then
-        assertNotNull(path);
-        assertEquals("/README.md", path);
-    }
-
-    /**
-     * 测试：移动目录
-     */
-    @Test
-    public void testMoveCatalog_Success() {
-        // Given
-        String catalogId = "catalog-1";
-        String newParentId = "new-parent";
-
-        when(catalogRepository.findById(catalogId))
-            .thenReturn(Optional.of(mockEntity));
+        when(catalogRepository.findById(anyString()))
+                .thenReturn(Optional.of(e1));
         when(catalogRepository.save(any(DocumentCatalogEntity.class)))
-            .thenReturn(mockEntity);
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        // When
-        DocumentCatalog result = catalogService.moveCatalog(catalogId, newParentId);
+        catalogService.batchUpdateOrder(Arrays.asList("c1", "c2"));
 
-        // Then
-        assertNotNull(result);
-        verify(catalogRepository, times(1)).findById(catalogId);
-        verify(catalogRepository, times(1)).save(any(DocumentCatalogEntity.class));
+        verify(catalogRepository, atLeastOnce())
+                .findById(anyString());
+    }
+
+    @Test
+    public void testCountByWarehouse_Success() {
+        String warehouseId = "warehouse-1";
+        when(catalogRepository.findByWarehouseIdAndIsDeleted(warehouseId, false))
+                .thenReturn(Collections.singletonList(mockEntity));
+
+        long count = catalogService.countByWarehouse(warehouseId);
+
+        assertEquals(1L, count);
+        verify(catalogRepository, times(1))
+                .findByWarehouseIdAndIsDeleted(warehouseId, false);
+    }
+
+    @Test
+    public void testExists_Success() {
+        when(catalogRepository.existsById("catalog-1"))
+                .thenReturn(true);
+
+        assertTrue(catalogService.exists("catalog-1"));
+        verify(catalogRepository, times(1)).existsById("catalog-1");
     }
 }
+

@@ -1,0 +1,8 @@
+{
+  "testSession": {
+    "startTime": "2025-11-15T08:24:56",
+    "baseUrl": "http://localhost:18091",
+    "testPlan": "API_TEST_PLAN.md"
+  },
+  "testResults": []
+}

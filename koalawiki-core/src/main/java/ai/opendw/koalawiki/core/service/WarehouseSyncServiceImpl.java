@@ -78,6 +78,7 @@ public class WarehouseSyncServiceImpl implements IWarehouseSyncService {
         // 创建同步记录
         WarehouseSyncRecordEntity syncRecord = new WarehouseSyncRecordEntity();
         syncRecord.setId(IdGenerator.generateId());
+        syncRecord.setCreatedAt(new Date());
         syncRecord.setWarehouseId(warehouseId);
         syncRecord.setStatus(WarehouseSyncStatus.IN_PROGRESS);
         syncRecord.setTrigger(trigger);

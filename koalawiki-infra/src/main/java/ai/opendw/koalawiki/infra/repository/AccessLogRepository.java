@@ -30,6 +30,15 @@ public interface AccessLogRepository extends JpaRepository<AccessLogEntity, Stri
     Page<AccessLogEntity> findByWarehouseId(String warehouseId, Pageable pageable);
 
     /**
+     * 按仓库ID分页查询访问日志（按时间倒序）
+     *
+     * @param warehouseId 仓库ID
+     * @param pageable 分页参数
+     * @return 分页结果
+     */
+    Page<AccessLogEntity> findByWarehouseIdOrderByAccessTimeDesc(String warehouseId, Pageable pageable);
+
+    /**
      * 按用户ID分页查询访问日志
      *
      * @param userId 用户ID
