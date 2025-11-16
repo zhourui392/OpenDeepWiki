@@ -60,7 +60,7 @@ public class WarehouseSyncExecutorImpl implements IWarehouseSyncExecutor {
             }
 
             WarehouseEntity warehouse = warehouseOpt.get();
-            String repositoryUrl = warehouse.getUrl();
+            String repositoryUrl = warehouse.getAddress();
 
             // 更新进度：开始克隆/拉取
             updateProgress(progress, "CLONE_OR_PULL", 1, 5, "Cloning or pulling repository");
@@ -100,7 +100,7 @@ public class WarehouseSyncExecutorImpl implements IWarehouseSyncExecutor {
             // 更新进度：处理文档
             updateProgress(progress, "PROCESS_DOCUMENTS", 4, 5, "Processing documents");
 
-            // TODO: 调用文档处理服务处理文档
+            // TODO: 文档处理将在上层服务中完成
 
             // 检查是否被取消
             if (isCancelled(syncRecord.getId())) {
@@ -158,7 +158,7 @@ public class WarehouseSyncExecutorImpl implements IWarehouseSyncExecutor {
             }
 
             WarehouseEntity warehouse = warehouseOpt.get();
-            String repositoryUrl = warehouse.getUrl();
+            String repositoryUrl = warehouse.getAddress();
 
             if (repositoryUrl == null || repositoryUrl.trim().isEmpty()) {
                 return ValidationResult.invalid("Repository URL is empty");
@@ -207,8 +207,12 @@ public class WarehouseSyncExecutorImpl implements IWarehouseSyncExecutor {
      * 构建Git凭证
      */
     private GitCredentials buildCredentials(WarehouseEntity warehouse) {
-        // TODO: 从仓库配置中获取认证信息
-        // 目前返回无需认证
+        // 从仓库配置中获取认证信息
+        if (warehouse.getGitUserName() != null && warehouse.getGitPassword() != null) {
+            return GitCredentials.httpBasic(warehouse.getGitUserName(), warehouse.getGitPassword());
+        }
+
+        // 无需认证
         return GitCredentials.none();
     }
 

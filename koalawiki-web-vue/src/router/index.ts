@@ -17,6 +17,16 @@ const routes = [
     component: () => import('@/views/Document.vue')
   },
   {
+    path: '/repository/:id/ai-documents',
+    name: 'AIDocuments',
+    component: () => import('@/views/AIDocuments.vue')
+  },
+  {
+    path: '/ai-documents/:id',
+    name: 'AIDocumentDetail',
+    component: () => import('@/views/AIDocumentDetail.vue')
+  },
+  {
     path: '/:pathMatch(.*)*',
     redirect: '/'
   }

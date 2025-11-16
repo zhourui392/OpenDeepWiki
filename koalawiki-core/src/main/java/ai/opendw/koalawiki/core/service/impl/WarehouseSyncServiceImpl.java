@@ -249,7 +249,7 @@ public class WarehouseSyncServiceImpl implements IWarehouseSyncService {
             syncRecordRepository.save(syncRecord);
 
             GitRepositoryInfo repoInfo = gitRepositoryManager.getOrCloneRepository(
-                    warehouse.getUrl(), credentials
+                    warehouse.getAddress(), credentials
             );
 
             syncRecord.setProgress(60);
@@ -320,11 +320,11 @@ public class WarehouseSyncServiceImpl implements IWarehouseSyncService {
      * 构建Git认证信息
      */
     private GitCredentials buildGitCredentials(WarehouseEntity warehouse) {
-        if (warehouse.getAuthUsername() != null && warehouse.getAuthPassword() != null) {
+        if (warehouse.getGitUserName() != null && warehouse.getGitPassword() != null) {
             GitCredentials credentials = new GitCredentials();
             credentials.setType(GitCredentials.CredentialType.HTTP_BASIC);
-            credentials.setUsername(warehouse.getAuthUsername());
-            credentials.setPassword(warehouse.getAuthPassword());
+            credentials.setUsername(warehouse.getGitUserName());
+            credentials.setPassword(warehouse.getGitPassword());
             return credentials;
         }
         return null;

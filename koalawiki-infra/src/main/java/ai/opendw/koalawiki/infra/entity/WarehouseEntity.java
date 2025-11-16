@@ -15,126 +15,148 @@ import java.util.Date;
 @Entity
 @Table(name = "warehouses",
     indexes = {
-        @Index(name = "idx_warehouse_status", columnList = "status"),
-        @Index(name = "idx_warehouse_user_id", columnList = "user_id"),
-        @Index(name = "idx_warehouse_created_at", columnList = "created_at")
+        @Index(name = "idx_name", columnList = "name"),
+        @Index(name = "idx_organization", columnList = "organization_name"),
+        @Index(name = "idx_status", columnList = "status"),
+        @Index(name = "idx_classify", columnList = "classify"),
+        @Index(name = "idx_user_id", columnList = "user_id"),
+        @Index(name = "idx_created_at", columnList = "created_at"),
+        @Index(name = "idx_is_recommended", columnList = "is_recommended")
     })
 public class WarehouseEntity extends BaseJpaEntity {
 
     /**
-     * 仓库名称
+     * 组织名称
      */
-    @Column(nullable = false, length = 200)
-    private String name;
+    @Column(name = "organization_name", length = 100)
+    private String organizationName;
 
     /**
-     * 仓库URL
+     * 仓库名称
      */
-    @Column(nullable = false, length = 500)
-    private String url;
+    @Column(name = "name", nullable = false, length = 200)
+    private String name;
 
     /**
      * 仓库描述
      */
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "description", length = 1000)
     private String description;
+
+    /**
+     * 仓库地址（Git URL）
+     */
+    @Column(name = "address", nullable = false, length = 500)
+    private String address;
+
+    /**
+     * 私有化Git账号
+     */
+    @Column(name = "git_user_name", length = 100)
+    private String gitUserName;
+
+    /**
+     * 私有化Git密码
+     */
+    @Column(name = "git_password", length = 200)
+    private String gitPassword;
+
+    /**
+     * 私有化Git邮箱
+     */
+    @Column(name = "email", length = 100)
+    private String email;
+
+    /**
+     * 仓库类型
+     */
+    @Column(name = "type", length = 50)
+    private String type;
+
+    /**
+     * 仓库分支
+     */
+    @Column(name = "branch", length = 100)
+    private String branch = "main";
 
     /**
      * 仓库状态
      */
-    @Column(nullable = false, length = 20)
+    @Column(name = "status", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
-    private WarehouseStatus status;
+    private WarehouseStatus status = WarehouseStatus.PENDING;
 
     /**
-     * 分类类型
+     * 错误信息
      */
-    @Column(nullable = false, length = 20)
+    @Column(name = "error", length = 2000)
+    private String error;
+
+    /**
+     * 仓库版本
+     */
+    @Column(name = "version", length = 50)
+    private String version;
+
+    /**
+     * 是否嵌入完成
+     */
+    @Column(name = "is_embedded", nullable = false)
+    private Boolean isEmbedded = false;
+
+    /**
+     * 是否推荐
+     */
+    @Column(name = "is_recommended", nullable = false)
+    private Boolean isRecommended = false;
+
+    /**
+     * 仓库类别
+     */
+    @Column(name = "classify", length = 50)
     @Enumerated(EnumType.STRING)
-    private ClassifyType classifyType;
+    private ClassifyType classify;
+
+    /**
+     * Star数量
+     */
+    @Column(name = "stars", nullable = false)
+    private Integer stars = 0;
+
+    /**
+     * Fork数量
+     */
+    @Column(name = "forks", nullable = false)
+    private Integer forks = 0;
 
     /**
      * 创建用户ID
      */
-    @Column(name = "user_id", nullable = false, length = 50)
+    @Column(name = "user_id")
     private String userId;
 
     /**
-     * 是否启用自动同步
+     * 是否启用同步
      */
-    @Column(nullable = false)
-    private Boolean autoSync = false;
+    @Column(name = "enable_sync", nullable = false)
+    private Boolean enableSync = true;
 
     /**
-     * 同步间隔（小时）
+     * 删除时间（软删除）
      */
-    private Integer syncInterval = 24;
-
-    /**
-     * 最后同步时间
-     */
+    @Column(name = "deleted_at")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date lastSyncTime;
-
-    /**
-     * 访问次数
-     */
-    private Long viewCount = 0L;
-
-    /**
-     * 星标数
-     */
-    private Long starCount = 0L;
-
-    /**
-     * 是否公开
-     */
-    @Column(nullable = false)
-    private Boolean isPublic = true;
-
-    /**
-     * 认证用户名（私有仓库）
-     */
-    @Column(length = 100)
-    private String authUsername;
-
-    /**
-     * 认证密码/令牌（私有仓库）
-     */
-    @Column(length = 500)
-    private String authPassword;
-
-    /**
-     * 默认分支
-     */
-    @Column(length = 100)
-    private String defaultBranch = "main";
-
-    /**
-     * 仓库语言
-     */
-    @Column(length = 50)
-    private String language;
-
-    /**
-     * 标签（JSON数组）
-     */
-    @Column(columnDefinition = "TEXT")
-    private String tags;
-
-    /**
-     * 仓库版本（Git commit ID）
-     */
-    @Column(length = 40)
-    private String version;
-
-    /**
-     * 错误消息
-     */
-    @Column(columnDefinition = "TEXT")
-    private String error;
+    private Date deletedAt;
 
     // Getters and Setters
+
+    public String getOrganizationName() {
+        return organizationName;
+    }
+
+    public void setOrganizationName(String organizationName) {
+        this.organizationName = organizationName;
+    }
 
     public String getName() {
         return name;
@@ -142,14 +164,6 @@ public class WarehouseEntity extends BaseJpaEntity {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
     }
 
     public String getDescription() {
@@ -160,6 +174,54 @@ public class WarehouseEntity extends BaseJpaEntity {
         this.description = description;
     }
 
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getGitUserName() {
+        return gitUserName;
+    }
+
+    public void setGitUserName(String gitUserName) {
+        this.gitUserName = gitUserName;
+    }
+
+    public String getGitPassword() {
+        return gitPassword;
+    }
+
+    public void setGitPassword(String gitPassword) {
+        this.gitPassword = gitPassword;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getBranch() {
+        return branch;
+    }
+
+    public void setBranch(String branch) {
+        this.branch = branch;
+    }
+
     public WarehouseStatus getStatus() {
         return status;
     }
@@ -168,108 +230,12 @@ public class WarehouseEntity extends BaseJpaEntity {
         this.status = status;
     }
 
-    public ClassifyType getClassifyType() {
-        return classifyType;
+    public String getError() {
+        return error;
     }
 
-    public void setClassifyType(ClassifyType classifyType) {
-        this.classifyType = classifyType;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public Boolean getAutoSync() {
-        return autoSync;
-    }
-
-    public void setAutoSync(Boolean autoSync) {
-        this.autoSync = autoSync;
-    }
-
-    public Integer getSyncInterval() {
-        return syncInterval;
-    }
-
-    public void setSyncInterval(Integer syncInterval) {
-        this.syncInterval = syncInterval;
-    }
-
-    public Date getLastSyncTime() {
-        return lastSyncTime;
-    }
-
-    public void setLastSyncTime(Date lastSyncTime) {
-        this.lastSyncTime = lastSyncTime;
-    }
-
-    public Long getViewCount() {
-        return viewCount;
-    }
-
-    public void setViewCount(Long viewCount) {
-        this.viewCount = viewCount;
-    }
-
-    public Long getStarCount() {
-        return starCount;
-    }
-
-    public void setStarCount(Long starCount) {
-        this.starCount = starCount;
-    }
-
-    public Boolean getIsPublic() {
-        return isPublic;
-    }
-
-    public void setIsPublic(Boolean isPublic) {
-        this.isPublic = isPublic;
-    }
-
-    public String getAuthUsername() {
-        return authUsername;
-    }
-
-    public void setAuthUsername(String authUsername) {
-        this.authUsername = authUsername;
-    }
-
-    public String getAuthPassword() {
-        return authPassword;
-    }
-
-    public void setAuthPassword(String authPassword) {
-        this.authPassword = authPassword;
-    }
-
-    public String getDefaultBranch() {
-        return defaultBranch;
-    }
-
-    public void setDefaultBranch(String defaultBranch) {
-        this.defaultBranch = defaultBranch;
-    }
-
-    public String getLanguage() {
-        return language;
-    }
-
-    public void setLanguage(String language) {
-        this.language = language;
-    }
-
-    public String getTags() {
-        return tags;
-    }
-
-    public void setTags(String tags) {
-        this.tags = tags;
+    public void setError(String error) {
+        this.error = error;
     }
 
     public String getVersion() {
@@ -280,11 +246,67 @@ public class WarehouseEntity extends BaseJpaEntity {
         this.version = version;
     }
 
-    public String getError() {
-        return error;
+    public Boolean getIsEmbedded() {
+        return isEmbedded;
     }
 
-    public void setError(String error) {
-        this.error = error;
+    public void setIsEmbedded(Boolean isEmbedded) {
+        this.isEmbedded = isEmbedded;
+    }
+
+    public Boolean getIsRecommended() {
+        return isRecommended;
+    }
+
+    public void setIsRecommended(Boolean isRecommended) {
+        this.isRecommended = isRecommended;
+    }
+
+    public ClassifyType getClassify() {
+        return classify;
+    }
+
+    public void setClassify(ClassifyType classify) {
+        this.classify = classify;
+    }
+
+    public Integer getStars() {
+        return stars;
+    }
+
+    public void setStars(Integer stars) {
+        this.stars = stars;
+    }
+
+    public Integer getForks() {
+        return forks;
+    }
+
+    public void setForks(Integer forks) {
+        this.forks = forks;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public Boolean getEnableSync() {
+        return enableSync;
+    }
+
+    public void setEnableSync(Boolean enableSync) {
+        this.enableSync = enableSync;
+    }
+
+    public Date getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(Date deletedAt) {
+        this.deletedAt = deletedAt;
     }
 }

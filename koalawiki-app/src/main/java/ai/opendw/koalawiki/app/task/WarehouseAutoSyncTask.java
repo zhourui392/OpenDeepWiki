@@ -144,7 +144,7 @@ public class WarehouseAutoSyncTask {
     private List<Warehouse> findWarehousesToSync() {
         // 查询启用自动同步且状态正常的仓库（使用WarehouseStatus枚举）
         List<ai.opendw.koalawiki.infra.entity.WarehouseEntity> warehouseEntities =
-                warehouseRepository.findByAutoSyncAndStatus(true, WarehouseStatus.COMPLETED);
+                warehouseRepository.findByEnableSyncAndStatus(true, WarehouseStatus.COMPLETED);
 
         // 转换为domain对象并过滤出需要同步的仓库
         return warehouseEntities.stream()
@@ -162,13 +162,12 @@ public class WarehouseAutoSyncTask {
         warehouse.setId(entity.getId());
         warehouse.setName(entity.getName());
         warehouse.setDescription(entity.getDescription());
-        warehouse.setAddress(entity.getUrl()); // WarehouseEntity用url代替address
+        warehouse.setAddress(entity.getAddress());
         warehouse.setStatus(entity.getStatus());
-        warehouse.setClassify(entity.getClassifyType()); // WarehouseEntity用classifyType代替classify
+        warehouse.setClassify(entity.getClassify());
         warehouse.setUserId(entity.getUserId());
-        warehouse.setEnableSync(entity.getAutoSync()); // WarehouseEntity用autoSync代替enableSync
+        warehouse.setEnableSync(entity.getEnableSync());
         warehouse.setCreatedAt(entity.getCreatedAt());
-        // WarehouseEntity与Warehouse字段不完全匹配，只映射存在的字段
         return warehouse;
     }
 

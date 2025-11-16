@@ -100,7 +100,7 @@ public class WarehouseSyncRecordEntity extends BaseJpaEntity {
     /**
      * 触发方式
      */
-    @Column(nullable = false, length = 20)
+    @Column(name = "`trigger`", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     private WarehouseSyncTrigger trigger;
 

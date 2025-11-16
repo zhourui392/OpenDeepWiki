@@ -1,6 +1,7 @@
 package ai.opendw.koalawiki.core.scheduler;
 
 import ai.opendw.koalawiki.core.service.IWarehouseSyncService;
+import ai.opendw.koalawiki.domain.warehouse.WarehouseStatus;
 import ai.opendw.koalawiki.domain.warehouse.WarehouseSyncStatus;
 import ai.opendw.koalawiki.domain.warehouse.WarehouseSyncTrigger;
 import ai.opendw.koalawiki.infra.entity.WarehouseEntity;
@@ -57,8 +58,9 @@ public class WarehouseSyncScheduler {
         log.info("开始执行定时仓库同步任务");
 
         try {
-            // 查找需要同步的仓库
-            List<WarehouseEntity> warehouses = warehouseRepository.findWarehousesForAutoSync();
+            // 查找需要同步的仓库（启用同步且状态为COMPLETED）
+            List<WarehouseEntity> warehouses = warehouseRepository.findByEnableSyncAndStatus(
+                true, WarehouseStatus.COMPLETED);
 
             if (warehouses.isEmpty()) {
                 log.debug("没有需要自动同步的仓库");

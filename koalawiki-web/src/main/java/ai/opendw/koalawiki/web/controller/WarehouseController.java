@@ -1,10 +1,8 @@
 package ai.opendw.koalawiki.web.controller;
 
-import ai.opendw.koalawiki.app.service.IDocumentCatalogService;
 import ai.opendw.koalawiki.core.git.CommitInfo;
 import ai.opendw.koalawiki.core.git.GitService;
 import ai.opendw.koalawiki.core.service.IWarehouseSyncService;
-import ai.opendw.koalawiki.domain.document.DocumentCatalog;
 import ai.opendw.koalawiki.domain.warehouse.WarehouseStatus;
 import ai.opendw.koalawiki.infra.entity.WarehouseEntity;
 import ai.opendw.koalawiki.infra.repository.WarehouseRepository;
@@ -59,7 +57,7 @@ import ai.opendw.koalawiki.domain.ClassifyType;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/Warehouse")
+@RequestMapping("/api/warehouse")
 @RequiredArgsConstructor
 @Validated
 public class WarehouseController {
@@ -67,7 +65,7 @@ public class WarehouseController {
     private final WarehouseRepository warehouseRepository;
     private final IWarehouseSyncService warehouseSyncService;
     private final GitService gitService;
-    private final IDocumentCatalogService documentCatalogService;
+    private final ai.opendw.koalawiki.core.git.GitPathResolver gitPathResolver;
 
     /**
      * 提交Git仓库
@@ -86,7 +84,7 @@ public class WarehouseController {
             }
 
             // 2. 检查仓库是否已存在
-            WarehouseEntity existing = warehouseRepository.findByUrl(request.getAddress());
+            WarehouseEntity existing = warehouseRepository.findByAddress(request.getAddress());
             if (existing != null) {
                 return ResponseEntity.ok(Result.error("仓库已存在"));
             }
@@ -96,16 +94,15 @@ public class WarehouseController {
             warehouse.setId(UUID.randomUUID().toString());
             warehouse.setCreatedAt(new Date());
             warehouse.setName(repoInfo.getRepositoryName());
-            warehouse.setUrl(request.getAddress());
-            warehouse.setDefaultBranch(request.getBranch() != null ? request.getBranch() : "main");
+            warehouse.setAddress(request.getAddress());
+            warehouse.setBranch(request.getBranch() != null ? request.getBranch() : "main");
             warehouse.setStatus(WarehouseStatus.PENDING);
-            warehouse.setClassifyType(ClassifyType.DOCUMENTATION);
-            warehouse.setUserId("default-user"); // TODO: 从认证信息获取
-            warehouse.setIsPublic(true);
+            warehouse.setClassify(ClassifyType.DOCUMENTATION);
+            warehouse.setUserId("default-admin-uuid-0001"); // TODO: 从认证信息获取
 
             if (request.getGitUserName() != null) {
-                warehouse.setAuthUsername(request.getGitUserName());
-                warehouse.setAuthPassword(request.getGitPassword());
+                warehouse.setGitUserName(request.getGitUserName());
+                warehouse.setGitPassword(request.getGitPassword());
             }
 
             // 4. 保存仓库
@@ -139,7 +136,7 @@ public class WarehouseController {
 
         try {
             // 检查仓库是否已存在
-            WarehouseEntity existing = warehouseRepository.findByUrl(request.getAddress());
+            WarehouseEntity existing = warehouseRepository.findByAddress(request.getAddress());
             if (existing != null) {
                 return ResponseEntity.ok(Result.error("仓库已存在"));
             }
@@ -148,16 +145,15 @@ public class WarehouseController {
             warehouse.setId(UUID.randomUUID().toString());
             warehouse.setCreatedAt(new Date());
             warehouse.setName(request.getRepositoryName());
-            warehouse.setUrl(request.getAddress());
-            warehouse.setDefaultBranch(request.getBranch() != null ? request.getBranch() : "main");
+            warehouse.setAddress(request.getAddress());
+            warehouse.setBranch(request.getBranch() != null ? request.getBranch() : "main");
             warehouse.setStatus(WarehouseStatus.PENDING);
-            warehouse.setClassifyType(ClassifyType.DOCUMENTATION);
-            warehouse.setUserId("default-user"); // TODO: 从认证信息获取
-            warehouse.setIsPublic(true);
+            warehouse.setClassify(ClassifyType.DOCUMENTATION);
+            warehouse.setUserId("default-admin-uuid-0001"); // TODO: 从认证信息获取
 
             if (request.getGitUserName() != null) {
-                warehouse.setAuthUsername(request.getGitUserName());
-                warehouse.setAuthPassword(request.getGitPassword());
+                warehouse.setGitUserName(request.getGitUserName());
+                warehouse.setGitPassword(request.getGitPassword());
             }
 
             warehouse = warehouseRepository.save(warehouse);
@@ -210,7 +206,7 @@ public class WarehouseController {
     /**
      * 获取仓库列表（分页）
      */
-    @GetMapping("/WarehouseList")
+    @GetMapping("/list")
     public ResponseEntity<Result<Page<WarehouseResponse>>> getWarehouseList(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "12") @Min(1) int pageSize,
@@ -260,50 +256,6 @@ public class WarehouseController {
         } catch (Exception e) {
             log.error("获取最后一个仓库失败", e);
             return ResponseEntity.ok(Result.error("查询失败: " + e.getMessage()));
-        }
-    }
-
-    /**
-     * 获取Git变更日志（最近提交）
-     */
-    @GetMapping("/ChangeLog")
-    public ResponseEntity<Result<List<ai.opendw.koalawiki.core.document.processors.ChangeLogProcessor.ChangeLogEntry>>> getChangeLog(
-            @RequestParam @NotBlank String address,
-            @RequestParam(required = false, defaultValue = "50") @Min(1) int limit) {
-
-        log.debug("获取变更日志: address={}, limit={}", address, limit);
-
-        try {
-            // 解析本地仓库路径
-            String repositoryIdentifier = getRepositoryIdentifier(address);
-            String localPath = "/data/koalawiki/git/" + repositoryIdentifier;
-
-            // 获取提交历史
-            List<CommitInfo> commits = gitService.getCommitHistory(localPath, limit);
-
-            // 转换为简化的变更日志条目
-            List<ai.opendw.koalawiki.core.document.processors.ChangeLogProcessor.ChangeLogEntry> entries =
-                    new ArrayList<>();
-
-            java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("yyyy-MM-dd");
-
-            for (CommitInfo commit : commits) {
-                ai.opendw.koalawiki.core.document.processors.ChangeLogProcessor.ChangeLogEntry entry =
-                        new ai.opendw.koalawiki.core.document.processors.ChangeLogProcessor.ChangeLogEntry();
-                entry.setCommitId(commit.getCommitId());
-                entry.setAuthor(commit.getAuthor());
-                entry.setCommitTime(commit.getCommitTime());
-                entry.setDate(df.format(commit.getCommitTime()));
-                entry.setMessage(commit.getMessage());
-                entry.setType("commit");
-                entries.add(entry);
-            }
-
-            return ResponseEntity.ok(Result.success(entries));
-
-        } catch (Exception e) {
-            log.error("获取变更日志失败: address={}", address, e);
-            return ResponseEntity.ok(Result.error("获取变更日志失败: " + e.getMessage()));
         }
     }
 
@@ -366,7 +318,7 @@ public class WarehouseController {
             WarehouseEntity warehouse = warehouseOpt.get();
 
             // 构建文件路径 - 使用Git存储路径
-            String storagePath = "/data/koalawiki/git/" + getRepositoryIdentifier(warehouse.getUrl());
+            String storagePath = gitPathResolver.getStoragePath() + "/" + getRepositoryIdentifier(warehouse.getAddress());
             java.nio.file.Path filePath = java.nio.file.Paths.get(storagePath, path);
 
             // 检查文件是否存在
@@ -422,7 +374,7 @@ public class WarehouseController {
             }
 
             WarehouseEntity warehouse = warehouseOpt.get();
-            String storagePath = "/data/koalawiki/git/" + getRepositoryIdentifier(warehouse.getUrl());
+            String storagePath = gitPathResolver.getStoragePath() + "/" + getRepositoryIdentifier(warehouse.getAddress());
             Path filePath = Paths.get(storagePath, path);
 
             if (!Files.exists(filePath)) {
@@ -458,7 +410,7 @@ public class WarehouseController {
             }
 
             WarehouseEntity warehouse = warehouseOpt.get();
-            String storagePath = "/data/koalawiki/git/" + getRepositoryIdentifier(warehouse.getUrl());
+            String storagePath = gitPathResolver.getStoragePath() + "/" + getRepositoryIdentifier(warehouse.getAddress());
             Path rootPath = Paths.get(storagePath);
 
             if (!Files.exists(rootPath) || !Files.isDirectory(rootPath)) {
@@ -527,7 +479,7 @@ public class WarehouseController {
                         .status(entity.getStatus() != null ? entity.getStatus().name() : null)
                         .version(entity.getVersion())
                         .viewCount(0L)
-                        .starCount(entity.getStarCount() != null ? entity.getStarCount().intValue() : 0);
+                        .starCount(entity.getStars() != null ? entity.getStars().intValue() : 0);
 
         collectFileStatistics(entity, builder);
 
@@ -545,7 +497,7 @@ public class WarehouseController {
     private void collectFileStatistics(WarehouseEntity entity,
                                        WarehouseStatsResponse.WarehouseStatsResponseBuilder builder) {
         try {
-            String storagePath = "/data/koalawiki/git/" + getRepositoryIdentifier(entity.getUrl());
+            String storagePath = "/data/koalawiki/git/" + getRepositoryIdentifier(entity.getAddress());
             Path rootPath = Paths.get(storagePath);
 
             if (Files.exists(rootPath) && Files.isDirectory(rootPath)) {
@@ -582,21 +534,23 @@ public class WarehouseController {
             // 支持的格式:
             // https://github.com/owner/repo.git
             // https://github.com/owner/repo
+            // https://code.example.com/group/subgroup/repo.git (多级路径)
             // git@github.com:owner/repo.git
 
-            Pattern httpsPattern = Pattern.compile("https?://[^/]+/([^/]+)/([^/]+?)(?:\\.git)?$");
-            Pattern sshPattern = Pattern.compile("git@[^:]+:([^/]+)/([^/]+?)(?:\\.git)?$");
+            // HTTPS格式: 支持多级路径，取最后一个路径段作为仓库名，之前的所有路径作为组织名
+            Pattern httpsPattern = Pattern.compile("https?://[^/]+/(.+?)/([^/]+?)(?:\\.git)?$");
+            Pattern sshPattern = Pattern.compile("git@[^:]+:(.+?)/([^/]+?)(?:\\.git)?$");
 
             Matcher httpsMatcher = httpsPattern.matcher(url);
             if (httpsMatcher.find()) {
-                String owner = httpsMatcher.group(1);
+                String owner = httpsMatcher.group(1);  // 可能包含多级路径，如 "group/subgroup"
                 String repo = httpsMatcher.group(2);
                 return new GitRepoInfo(owner, repo);
             }
 
             Matcher sshMatcher = sshPattern.matcher(url);
             if (sshMatcher.find()) {
-                String owner = sshMatcher.group(1);
+                String owner = sshMatcher.group(1);  // 可能包含多级路径
                 String repo = sshMatcher.group(2);
                 return new GitRepoInfo(owner, repo);
             }
@@ -680,11 +634,11 @@ public class WarehouseController {
         response.setName(entity.getName());
         response.setOrganizationName(null); // Entity中没有这个字段
         response.setDescription(entity.getDescription());
-        response.setAddress(entity.getUrl());
-        response.setBranch(entity.getDefaultBranch());
+        response.setAddress(entity.getAddress());
+        response.setBranch(entity.getBranch());
         response.setStatus(entity.getStatus());
         response.setError(entity.getError());
-        response.setStars(entity.getStarCount() != null ? entity.getStarCount().intValue() : 0);
+        response.setStars(entity.getStars() != null ? entity.getStars().intValue() : 0);
         response.setForks(0); // Entity中没有forks字段
         response.setCreatedAt(entity.getCreatedAt());
         response.setUpdatedAt(null); // Entity中没有updatedAt字段
@@ -761,218 +715,6 @@ public class WarehouseController {
         public int getDirectoryCount() {
             return directoryCount;
         }
-    }
-
-    /**
-     * 获取文档树结构
-     * 返回仓库的文档目录树，用于前端展示
-     *
-     * @param warehouseId 仓库ID
-     * @return 文档树结构
-     * @author zhourui(V33215020)
-     * @since 2025/11/15
-     */
-    @GetMapping("/GetDocumentTree")
-    public ResponseEntity<Result<DocumentTreeNode>> getDocumentTree(
-            @RequestParam @NotBlank String warehouseId) {
-
-        log.debug("获取文档树: warehouseId={}", warehouseId);
-
-        try {
-            Optional<WarehouseEntity> warehouseOpt = warehouseRepository.findById(warehouseId);
-            if (!warehouseOpt.isPresent()) {
-                return ResponseEntity.ok(Result.error("仓库不存在"));
-            }
-
-            DocumentCatalog catalogTree = documentCatalogService.getCatalogTree(warehouseId);
-
-            if (catalogTree == null) {
-                log.warn("仓库没有文档目录: {}", warehouseId);
-                DocumentTreeNode emptyTree = buildEmptyDocumentTree(warehouseId);
-                return ResponseEntity.ok(Result.success(emptyTree));
-            }
-
-            DocumentTreeNode treeNode = convertCatalogToTreeNode(catalogTree);
-            return ResponseEntity.ok(Result.success(treeNode));
-
-        } catch (Exception e) {
-            log.error("获取文档树失败: warehouseId={}", warehouseId, e);
-            return ResponseEntity.ok(Result.error("获取文档树失败: " + e.getMessage()));
-        }
-    }
-
-    /**
-     * 获取思维导图数据
-     * 返回适用于思维导图组件的JSON数据格式
-     *
-     * @param warehouseId 仓库ID
-     * @return 思维导图数据
-     * @author zhourui(V33215020)
-     * @since 2025/11/15
-     */
-    @GetMapping("/minimap")
-    public ResponseEntity<Result<MindMapNode>> getMindMap(
-            @RequestParam @NotBlank String warehouseId) {
-
-        log.debug("获取思维导图: warehouseId={}", warehouseId);
-
-        try {
-            Optional<WarehouseEntity> warehouseOpt = warehouseRepository.findById(warehouseId);
-            if (!warehouseOpt.isPresent()) {
-                return ResponseEntity.ok(Result.error("仓库不存在"));
-            }
-
-            WarehouseEntity warehouse = warehouseOpt.get();
-            DocumentCatalog catalogTree = documentCatalogService.getCatalogTree(warehouseId);
-
-            MindMapNode rootNode;
-            if (catalogTree == null) {
-                rootNode = buildEmptyMindMapNode(warehouse);
-            } else {
-                rootNode = convertCatalogToMindMapNode(catalogTree, warehouse);
-            }
-
-            return ResponseEntity.ok(Result.success(rootNode));
-
-        } catch (Exception e) {
-            log.error("获取思维导图失败: warehouseId={}", warehouseId, e);
-            return ResponseEntity.ok(Result.error("获取思维导图失败: " + e.getMessage()));
-        }
-    }
-
-    /**
-     * 构建空文档树
-     */
-    private DocumentTreeNode buildEmptyDocumentTree(String warehouseId) {
-        DocumentTreeNode node = new DocumentTreeNode();
-        node.setId(warehouseId);
-        node.setName("Root");
-        node.setType("directory");
-        node.setChildren(new ArrayList<>());
-        return node;
-    }
-
-    /**
-     * 转换DocumentCatalog为DocumentTreeNode
-     */
-    private DocumentTreeNode convertCatalogToTreeNode(DocumentCatalog catalog) {
-        DocumentTreeNode node = new DocumentTreeNode();
-        node.setId(catalog.getId());
-        node.setName(catalog.getName());
-        node.setUrl(catalog.getUrl());
-        node.setDescription(catalog.getDescription());
-        node.setType("catalog");
-        node.setOrder(catalog.getOrder());
-        node.setIsCompleted(catalog.getIsCompleted());
-
-        if (catalog.getI18nTranslations() != null && !catalog.getI18nTranslations().isEmpty()) {
-            node.setChildren(new ArrayList<>());
-        }
-
-        return node;
-    }
-
-    /**
-     * 构建空思维导图节点
-     */
-    private MindMapNode buildEmptyMindMapNode(WarehouseEntity warehouse) {
-        MindMapNode node = new MindMapNode();
-        node.setId(warehouse.getId());
-        node.setTopic(warehouse.getName() != null ? warehouse.getName() : "未命名仓库");
-        node.setDirection("right");
-        node.setExpanded(true);
-        node.setChildren(new ArrayList<>());
-        return node;
-    }
-
-    /**
-     * 转换DocumentCatalog为MindMapNode
-     */
-    private MindMapNode convertCatalogToMindMapNode(DocumentCatalog catalog, WarehouseEntity warehouse) {
-        MindMapNode rootNode = new MindMapNode();
-        rootNode.setId(warehouse.getId());
-        rootNode.setTopic(warehouse.getName() != null ? warehouse.getName() : "未命名仓库");
-        rootNode.setDirection("right");
-        rootNode.setExpanded(true);
-
-        List<MindMapNode> children = new ArrayList<>();
-        MindMapNode catalogNode = buildMindMapNodeFromCatalog(catalog);
-        if (catalogNode != null) {
-            children.add(catalogNode);
-        }
-        rootNode.setChildren(children);
-
-        return rootNode;
-    }
-
-    /**
-     * 从DocumentCatalog构建MindMapNode
-     */
-    private MindMapNode buildMindMapNodeFromCatalog(DocumentCatalog catalog) {
-        if (catalog == null) {
-            return null;
-        }
-
-        MindMapNode node = new MindMapNode();
-        node.setId(catalog.getId());
-        node.setTopic(catalog.getName());
-        node.setExpanded(false);
-        node.setChildren(new ArrayList<>());
-
-        return node;
-    }
-
-    /**
-     * 文档树节点
-     */
-    public static class DocumentTreeNode {
-        private String id;
-        private String name;
-        private String url;
-        private String description;
-        private String type;
-        private Integer order;
-        private Boolean isCompleted;
-        private List<DocumentTreeNode> children;
-
-        public String getId() { return id; }
-        public void setId(String id) { this.id = id; }
-        public String getName() { return name; }
-        public void setName(String name) { this.name = name; }
-        public String getUrl() { return url; }
-        public void setUrl(String url) { this.url = url; }
-        public String getDescription() { return description; }
-        public void setDescription(String description) { this.description = description; }
-        public String getType() { return type; }
-        public void setType(String type) { this.type = type; }
-        public Integer getOrder() { return order; }
-        public void setOrder(Integer order) { this.order = order; }
-        public Boolean getIsCompleted() { return isCompleted; }
-        public void setIsCompleted(Boolean isCompleted) { this.isCompleted = isCompleted; }
-        public List<DocumentTreeNode> getChildren() { return children; }
-        public void setChildren(List<DocumentTreeNode> children) { this.children = children; }
-    }
-
-    /**
-     * 思维导图节点
-     */
-    public static class MindMapNode {
-        private String id;
-        private String topic;
-        private String direction;
-        private Boolean expanded;
-        private List<MindMapNode> children;
-
-        public String getId() { return id; }
-        public void setId(String id) { this.id = id; }
-        public String getTopic() { return topic; }
-        public void setTopic(String topic) { this.topic = topic; }
-        public String getDirection() { return direction; }
-        public void setDirection(String direction) { this.direction = direction; }
-        public Boolean getExpanded() { return expanded; }
-        public void setExpanded(Boolean expanded) { this.expanded = expanded; }
-        public List<MindMapNode> getChildren() { return children; }
-        public void setChildren(List<MindMapNode> children) { this.children = children; }
     }
 
     /**

@@ -1,14 +1,17 @@
 package ai.opendw.koalawiki.core.service;
 
+import ai.opendw.koalawiki.core.event.WarehouseSyncCompletedEvent;
 import ai.opendw.koalawiki.core.util.IdGenerator;
 import ai.opendw.koalawiki.domain.warehouse.WarehouseSyncRecord;
 import ai.opendw.koalawiki.domain.warehouse.WarehouseSyncStatus;
 import ai.opendw.koalawiki.domain.warehouse.WarehouseSyncTrigger;
 import ai.opendw.koalawiki.infra.entity.WarehouseSyncRecordEntity;
 import ai.opendw.koalawiki.infra.repository.WarehouseSyncRecordRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +37,8 @@ public class WarehouseSyncServiceImpl implements IWarehouseSyncService {
 
     private final WarehouseSyncRecordRepository syncRecordRepository;
     private final IWarehouseSyncExecutor syncExecutor;
+    private final ApplicationEventPublisher eventPublisher;
+    private final ObjectMapper objectMapper;
 
     /**
      * 正在进行的同步任务缓存
@@ -151,13 +156,55 @@ public class WarehouseSyncServiceImpl implements IWarehouseSyncService {
             syncRecord.setUpdatedFileCount(result.getUpdatedCount());
             syncRecord.setDeletedFileCount(result.getDeletedCount());
             syncRecord.setDetails(result.getDetails());
+
+            // 保存记录
+            syncRecordRepository.save(syncRecord);
+            log.info("Sync record updated: {}, status: {}", syncRecord.getId(), syncRecord.getStatus());
+
+            // 发布同步完成事件
+            try {
+                // 从details JSON中提取localPath
+                String localPath = extractLocalPath(result.getDetails());
+                if (localPath != null && !localPath.isEmpty()) {
+                    WarehouseSyncCompletedEvent event = new WarehouseSyncCompletedEvent(
+                            this,
+                            syncRecord.getWarehouseId(),
+                            syncRecord.getId(),
+                            localPath,
+                            result.getToVersion(),
+                            result.getFileCount()
+                    );
+                    eventPublisher.publishEvent(event);
+                    log.info("Published WarehouseSyncCompletedEvent for warehouse: {}", syncRecord.getWarehouseId());
+                } else {
+                    log.warn("Cannot publish event: localPath not found in sync result details");
+                }
+            } catch (Exception e) {
+                log.error("Failed to publish sync completed event", e);
+                // 不影响主流程,仅记录日志
+            }
         } else {
             syncRecord.setStatus(WarehouseSyncStatus.FAILED);
             syncRecord.setErrorMessage(result.getErrorMessage());
+            syncRecordRepository.save(syncRecord);
+            log.info("Sync record updated: {}, status: {}", syncRecord.getId(), syncRecord.getStatus());
         }
+    }
 
-        syncRecordRepository.save(syncRecord);
-        log.info("Sync record updated: {}, status: {}", syncRecord.getId(), syncRecord.getStatus());
+    /**
+     * 从details JSON中提取localPath
+     */
+    private String extractLocalPath(String details) {
+        try {
+            if (details == null || details.trim().isEmpty()) {
+                return null;
+            }
+            Map<String, Object> detailsMap = objectMapper.readValue(details, Map.class);
+            return (String) detailsMap.get("localPath");
+        } catch (Exception e) {
+            log.error("Failed to extract localPath from details", e);
+            return null;
+        }
     }
 
     @Override

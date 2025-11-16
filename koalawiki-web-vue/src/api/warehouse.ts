@@ -19,22 +19,38 @@ export interface WarehouseResponse {
   userId: string
 }
 
+export interface SubmitWarehouseRequest {
+  address: string
+  branch?: string
+  gitUserName?: string
+  gitPassword?: string
+}
+
 export const warehouseApi = {
   getWarehouseList(page: number, pageSize: number, keyword?: string) {
-    return apiClient.get<WarehouseResponse[]>('/Warehouse/WarehouseList', {
+    return apiClient.get<WarehouseResponse[]>('/warehouse/list', {
       params: { page, pageSize, keyword }
     })
   },
 
   getWarehouse(id: string) {
-    return apiClient.get<WarehouseResponse>('/Repository/Repository', {
+    return apiClient.get<WarehouseResponse>('/repository/detail', {
       params: { id }
     })
   },
 
   getDocumentTree(warehouseId: string) {
-    return apiClient.get('/Warehouse/GetDocumentTree', {
+    return apiClient.get('/warehouse/document-tree', {
       params: { warehouseId }
     })
+  },
+
+  submitWarehouse(request: SubmitWarehouseRequest) {
+    return apiClient.post<WarehouseResponse>('/warehouse/SubmitWarehouse', request)
+  },
+
+  // 手动触发同步
+  triggerSync(warehouseId: string, forceSync: boolean = false) {
+    return apiClient.post('/warehouse/sync/trigger', { warehouseId, forceSync })
   }
 }

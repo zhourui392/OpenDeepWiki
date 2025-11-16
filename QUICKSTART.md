@@ -1,31 +1,41 @@
-# OpenDeepWiki Java 版本 - 快速开始指南
+# OpenDeepWiki - 快速开始指南
 
 ## 环境要求
 
-- JDK 1.8
+- JDK 1.8+
 - Maven 3.6+
+- Node.js 20+ (前端开发)
+- MySQL 5.7+ / PostgreSQL 12+ (生产环境)
+- Claude CLI / Codex CLI (AI文档生成,可选)
 - IDE（推荐 IntelliJ IDEA，需安装 Lombok 插件）
 
 ## 项目结构
 
 ```
-java/
+OpenDeepWiki/
 ├── pom.xml                      # 父 POM 文件
 ├── koalawiki-domain/           # 领域模型层
 ├── koalawiki-core/             # 核心服务层
 ├── koalawiki-infra/            # 基础设施层
 ├── koalawiki-app/              # 应用服务层
 ├── koalawiki-web/              # 接口层（Web入口）
-├── README.md                    # 迁移计划
-└── PROGRESS.md                  # 开发进度
+├── koalawiki-web-vue/          # Vue 3 前端
+├── README.md                   # 项目说明
+└── QUICKSTART.md               # 本文件
 ```
 
-## 编译项目
+## 快速启动
+
+### 1. 克隆项目
 
 ```bash
-# 进入 Java 项目目录
-cd /home/ubuntu/workspace/OpenDeepWiki/java
+git clone https://github.com/your-org/OpenDeepWiki.git
+cd OpenDeepWiki
+```
 
+### 2. 编译项目
+
+```bash
 # 清理并编译
 mvn clean compile
 
@@ -33,7 +43,7 @@ mvn clean compile
 mvn clean package -DskipTests
 ```
 
-## 运行项目
+### 3. 运行应用
 
 ```bash
 # 方式1：使用 Maven 插件运行
@@ -43,14 +53,21 @@ mvn spring-boot:run -pl koalawiki-web
 java -jar koalawiki-web/target/koalawiki-web-0.1.0-SNAPSHOT.jar
 ```
 
+### 4. 访问应用
+
+- 应用首页: http://localhost:18091
+- H2控制台: http://localhost:18091/h2-console
+- API健康检查: http://localhost:18091/api/health
+
 ## 配置说明
 
 ### 默认配置（H2内存数据库）
+
 应用默认使用 H2 内存数据库，配置文件位于 `koalawiki-web/src/main/resources/application.yml`
 
 ```yaml
 server:
-  port: 8080
+  port: 18091
 
 spring:
   datasource:
@@ -58,52 +75,81 @@ spring:
     url: jdbc:h2:mem:koalawiki
     username: sa
     password:
+  h2:
+    console:
+      enabled: true
 ```
 
-### MySQL 配置（推荐生产环境）
-创建 `application-mysql.yml`：
+### MySQL 配置（生产环境）
 
-```yaml
-spring:
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/koalawiki?useUnicode=true&characterEncoding=utf8&useSSL=false
-    username: root
-    password: your_password
-  jpa:
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+1. 创建数据库:
+```sql
+CREATE DATABASE koalawiki CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-运行时指定 profile：
+2. 配置环境变量:
 ```bash
-mvn spring-boot:run -pl koalawiki-web -Dspring-boot.run.profiles=mysql
+export SPRING_PROFILES_ACTIVE=mysql
+export DB_PASSWORD=your_password
 ```
 
-### PostgreSQL 配置
-创建 `application-postgresql.yml`：
+3. 运行应用:
+```bash
+mvn spring-boot:run -pl koalawiki-web
+```
 
+### AI配置（可选）
+
+如果需要使用AI文档生成功能,需要配置AI Agent:
+
+```bash
+# Claude CLI
+export CLAUDE_API_KEY=your_key
+
+# Codex CLI
+export CODEX_API_KEY=your_key
+```
+
+配置文件 (`application.yml`):
 ```yaml
-spring:
-  datasource:
-    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/koalawiki
-    username: postgres
-    password: your_password
-  jpa:
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+koalawiki:
+  ai:
+    claude:
+      command: claude
+    codex:
+      command: codex
+    default-agent: claude
+```
+
+## 前端开发
+
+### 安装依赖
+
+```bash
+cd koalawiki-web-vue
+npm install
+```
+
+### 开发模式
+
+```bash
+npm run dev
+# 访问 http://localhost:5173
+```
+
+### 生产构建
+
+```bash
+npm run build
+# 构建输出到 dist/ 目录
 ```
 
 ## 访问应用
 
 ### 健康检查
+
 ```bash
-curl http://localhost:8080/api/health
+curl http://localhost:18091/api/health
 ```
 
 响应示例：
@@ -115,22 +161,60 @@ curl http://localhost:8080/api/health
     "status": "UP",
     "application": "OpenDeepWiki",
     "version": "0.1.0-SNAPSHOT"
-  },
-  "timestamp": 1699999999999
+  }
 }
 ```
 
 ### H2 控制台
-访问：http://localhost:8080/h2-console
+
+访问：http://localhost:18091/h2-console
 
 连接信息：
 - JDBC URL: `jdbc:h2:mem:koalawiki`
 - Username: `sa`
 - Password: (留空)
 
-### Actuator 端点
-- 健康检查：http://localhost:8080/actuator/health
-- 应用信息：http://localhost:8080/actuator/info
+### 默认用户
+
+- 邮箱: `admin@koalawiki.com`
+- 密码: `123456`
+
+## 使用示例
+
+### 1. 添加仓库
+
+```bash
+curl -X POST http://localhost:18091/api/warehouse/SubmitWarehouse \
+  -H "Content-Type: application/json" \
+  -d '{
+    "address": "https://github.com/username/repo.git",
+    "branch": "main"
+  }'
+```
+
+### 2. 生成文档
+
+```bash
+curl -X POST http://localhost:18091/api/v1/warehouses/{warehouseId}/generate-docs \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agentType": "claude",
+    "language": "chinese"
+  }'
+```
+
+### 3. 查看文档
+
+```bash
+# 文档列表
+curl "http://localhost:18091/api/v1/warehouses/{warehouseId}/documents?page=0&size=20"
+
+# 文档详情
+curl "http://localhost:18091/api/v1/documents/{documentId}"
+
+# 文档统计
+curl "http://localhost:18091/api/v1/warehouses/{warehouseId}/doc-stats"
+```
 
 ## IDE 配置
 
@@ -147,34 +231,31 @@ curl http://localhost:8080/api/health
 
 3. **导入项目**
    - File → Open
-   - 选择 `java/pom.xml`
+   - 选择 `pom.xml`
    - 作为 Maven 项目导入
 
-### Eclipse
+### VSCode
 
-1. **安装 Lombok**
-   - 下载 lombok.jar
-   - 双击运行安装程序
-   - 选择 Eclipse 安装目录
+1. **安装扩展**
+   - Extension Pack for Java
+   - Spring Boot Extension Pack
+   - Vue - Official
 
-2. **导入项目**
-   - File → Import → Maven → Existing Maven Projects
-   - 选择 `java` 目录
+2. **打开项目**
+   - File → Open Folder
+   - 选择项目根目录
 
 ## 常见问题
 
 ### Q: 编译失败，提示找不到 lombok
-A: 确保在对应模块的 pom.xml 中添加了 lombok 依赖：
-```xml
-<dependency>
-    <groupId>org.projectlombok</groupId>
-    <artifactId>lombok</artifactId>
-    <scope>provided</scope>
-</dependency>
-```
+A: 确保在对应模块的 pom.xml 中添加了 lombok 依赖，并在IDE中安装了Lombok插件。
 
-### Q: 运行时提示找不到主类
-A: 确保在 `koalawiki-web` 模块运行，该模块包含 `@SpringBootApplication` 注解的主类。
+### Q: 端口被占用
+A: 修改 `application.yml` 中的端口号：
+```yaml
+server:
+  port: 18092  # 改为其他端口
+```
 
 ### Q: H2 控制台无法访问
 A: 检查 `application.yml` 中是否启用了 H2 控制台：
@@ -185,18 +266,18 @@ spring:
       enabled: true
 ```
 
-### Q: 端口被占用
-A: 修改 `application.yml` 中的端口号：
-```yaml
-server:
-  port: 8081  # 改为其他端口
-```
+### Q: AI文档生成失败
+A:
+1. 检查是否安装了Claude CLI或Codex CLI
+2. 检查环境变量配置
+3. 查看日志获取详细错误信息
 
 ## 开发建议
 
 ### 代码规范
-- 使用阿里巴巴 Java 开发规范（P3C）
-- 执行代码检查：`mvn pmd:check`
+- 遵循阿里巴巴 Java 开发规范（P3C）
+- 使用Lombok减少样板代码
+- 编写单元测试
 
 ### 日志配置
 日志级别配置在 `application.yml`：
@@ -214,16 +295,42 @@ mvn test
 
 # 运行单个模块的测试
 mvn test -pl koalawiki-core
+
+# 跳过测试
+mvn package -DskipTests
+```
+
+## 故障排查
+
+### 查看日志
+```bash
+# 应用日志
+tail -f logs/koalawiki.log
+
+# Spring Boot 日志
+java -jar koalawiki-web/target/koalawiki-web-0.1.0-SNAPSHOT.jar --debug
+```
+
+### 数据库问题
+```bash
+# 检查数据库连接
+curl http://localhost:18091/actuator/health
+
+# 查看H2控制台
+访问 http://localhost:18091/h2-console
 ```
 
 ## 下一步
 
-查看 [PROGRESS.md](./PROGRESS.md) 了解项目进度和后续计划。
+- 查看 [README.md](./README.md) 了解完整功能
+- 查看API文档了解接口详情
+- 配置AI Agent开始生成文档
 
 ## 技术支持
 
-- 项目文档：[README.md](./README.md)
-- 开发进度：[PROGRESS.md](./PROGRESS.md)
+- 项目主页: https://github.com/your-org/OpenDeepWiki
+- 问题反馈: https://github.com/your-org/OpenDeepWiki/issues
 
 ---
-**最后更新**: 2025-11-13
+
+**最后更新**: 2025-11-16

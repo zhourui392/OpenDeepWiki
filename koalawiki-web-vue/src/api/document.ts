@@ -11,13 +11,13 @@ export interface FileContentResponse {
 
 export const documentApi = {
   getFileContent(warehouseId: string, path: string) {
-    return apiClient.get<FileContentResponse>('/Repository/FileContent', {
+    return apiClient.get<FileContentResponse>('/repository/FileContent', {
       params: { warehouseId, path }
     })
   },
 
   getDocumentCatalogs(warehouseId: string) {
-    return apiClient.get('/Repository/DocumentCatalogs', {
+    return apiClient.get('/repository/DocumentCatalogs', {
       params: { warehouseId }
     })
   }

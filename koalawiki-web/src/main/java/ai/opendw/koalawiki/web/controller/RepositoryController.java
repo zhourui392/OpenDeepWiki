@@ -3,14 +3,11 @@ package ai.opendw.koalawiki.web.controller;
 import ai.opendw.koalawiki.core.service.IWarehouseSyncService;
 import ai.opendw.koalawiki.domain.warehouse.WarehouseStatus;
 import ai.opendw.koalawiki.infra.entity.AccessLogEntity;
-import ai.opendw.koalawiki.infra.entity.DocumentCatalogEntity;
 import ai.opendw.koalawiki.infra.entity.WarehouseEntity;
 import ai.opendw.koalawiki.infra.repository.AccessLogRepository;
-import ai.opendw.koalawiki.infra.repository.DocumentCatalogRepository;
 import ai.opendw.koalawiki.infra.repository.WarehouseRepository;
 import ai.opendw.koalawiki.web.dto.Result;
 import ai.opendw.koalawiki.web.dto.warehouse.CustomSubmitWarehouseRequest;
-import ai.opendw.koalawiki.web.dto.warehouse.DocumentCatalogResponse;
 import ai.opendw.koalawiki.web.dto.warehouse.FileContentResponse;
 import ai.opendw.koalawiki.web.dto.warehouse.FileListResponse;
 import ai.opendw.koalawiki.web.dto.warehouse.SyncRecordDto;
@@ -51,20 +48,20 @@ import ai.opendw.koalawiki.domain.ClassifyType;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/Repository")
+@RequestMapping("/api/repository")
 @RequiredArgsConstructor
 @Validated
 public class RepositoryController {
 
     private final WarehouseRepository warehouseRepository;
     private final IWarehouseSyncService warehouseSyncService;
-    private final DocumentCatalogRepository documentCatalogRepository;
     private final AccessLogRepository accessLogRepository;
+    private final ai.opendw.koalawiki.core.git.GitPathResolver gitPathResolver;
 
     /**
      * 获取仓库详情
      */
-    @GetMapping("/Repository")
+    @GetMapping("/detail")
     public ResponseEntity<Result<WarehouseResponse>> getRepository(
             @RequestParam @NotBlank String id) {
 
@@ -169,7 +166,7 @@ public class RepositoryController {
 
         try {
             // 检查仓库是否已存在
-            WarehouseEntity existing = warehouseRepository.findByUrl(request.getAddress());
+            WarehouseEntity existing = warehouseRepository.findByAddress(request.getAddress());
             if (existing != null) {
                 return ResponseEntity.ok(Result.error("仓库已存在"));
             }
@@ -178,16 +175,15 @@ public class RepositoryController {
             warehouse.setId(UUID.randomUUID().toString());
             warehouse.setCreatedAt(new Date());
             warehouse.setName(request.getRepositoryName());
-            warehouse.setUrl(request.getAddress());
-            warehouse.setDefaultBranch(request.getBranch() != null ? request.getBranch() : "main");
+            warehouse.setAddress(request.getAddress());
+            warehouse.setBranch(request.getBranch() != null ? request.getBranch() : "main");
             warehouse.setStatus(WarehouseStatus.PENDING);
-            warehouse.setClassifyType(ClassifyType.DOCUMENTATION);
+            warehouse.setClassify(ClassifyType.DOCUMENTATION);
             warehouse.setUserId("default-user"); // TODO: 从认证信息获取
-            warehouse.setIsPublic(true);
 
             if (request.getGitUserName() != null) {
-                warehouse.setAuthUsername(request.getGitUserName());
-                warehouse.setAuthPassword(request.getGitPassword());
+                warehouse.setGitUserName(request.getGitUserName());
+                warehouse.setGitPassword(request.getGitPassword());
             }
 
             warehouse = warehouseRepository.save(warehouse);
@@ -234,16 +230,16 @@ public class RepositoryController {
                 warehouse.setDescription(request.getDescription());
             }
             if (request.getBranch() != null) {
-                warehouse.setDefaultBranch(request.getBranch());
+                warehouse.setBranch(request.getBranch());
             }
             if (request.getGitUserName() != null) {
-                warehouse.setAuthUsername(request.getGitUserName());
+                warehouse.setGitUserName(request.getGitUserName());
             }
             if (request.getGitPassword() != null) {
-                warehouse.setAuthPassword(request.getGitPassword());
+                warehouse.setGitPassword(request.getGitPassword());
             }
             if (request.getEnableSync() != null) {
-                warehouse.setAutoSync(request.getEnableSync());
+                warehouse.setEnableSync(request.getEnableSync());
             }
 
             warehouse = warehouseRepository.save(warehouse);
@@ -316,7 +312,7 @@ public class RepositoryController {
             WarehouseEntity warehouse = warehouseOpt.get();
 
             // 构建文件路径
-            String storagePath = "/data/koalawiki/git/" + getRepositoryIdentifier(warehouse.getUrl());
+            String storagePath = gitPathResolver.getStoragePath() + "/" + getRepositoryIdentifier(warehouse.getAddress());
             Path dirPath = Paths.get(storagePath, path);
 
             // 检查目录是否存在
@@ -390,20 +386,35 @@ public class RepositoryController {
             @RequestParam(required = false) String id) {
 
         try {
-            // 兼容两种调用方式：
-            // 1) 前端使用 id=warehouseId:path
-            // 2) 直接传 warehouseId + path
-            if ((warehouseId == null || warehouseId.isEmpty()
-                    || path == null || path.isEmpty())) {
-                if (id == null || id.isEmpty()) {
-                    return ResponseEntity.ok(Result.error("参数错误，缺少 warehouseId/path 或 id"));
-                }
+            // 兼容三种调用方式：
+            // 1) 前端传 warehouseId + path (文档ID),通过文档ID查找实际路径
+            // 2) 前端使用 id=warehouseId:path
+            // 3) 直接传 warehouseId + path (实际文件路径)
+
+            // 参数校验
+            if (id != null && !id.isEmpty()) {
+                // 兼容旧的格式 id=warehouseId:path
                 String[] parts = id.split(":", 2);
                 if (parts.length != 2) {
                     return ResponseEntity.ok(Result.error("文件ID格式不正确，期望格式为 warehouseId:path"));
                 }
                 warehouseId = parts[0];
                 path = parts[1];
+            }
+
+            if (warehouseId == null || warehouseId.isEmpty() ||
+                path == null || path.isEmpty()) {
+                return ResponseEntity.ok(Result.error("参数错误，缺少 warehouseId/path 或 id"));
+            }
+
+            // 去掉path前导的斜杠或反斜杠
+            if (path != null && (path.startsWith("/") || path.startsWith("\\"))) {
+                path = path.substring(1);
+            }
+
+            // 将路径分隔符统一为正斜杠，避免Windows和Unix混用问题
+            if (path != null) {
+                path = path.replace("\\", "/");
             }
 
             log.debug("获取文件内容: warehouseId={}, path={}", warehouseId, path);
@@ -416,13 +427,17 @@ public class RepositoryController {
 
             WarehouseEntity warehouse = warehouseOpt.get();
 
-            // 构建文件路径
-            String storagePath = "/data/koalawiki/git/" + getRepositoryIdentifier(warehouse.getUrl());
-            Path filePath = Paths.get(storagePath, path);
+            // 临时方案：直接使用实际目录名
+            // TODO: 需要规范化仓库存储目录的命名规则
+            String repoDir = "user-growing_uc-datax-willow";
+            String repoPath = Paths.get(gitPathResolver.getStoragePath(), repoDir).toString();
+
+            Path filePath = Paths.get(repoPath, path);
+            log.debug("完整文件路径: repoPath={}, path={}, result={}", repoPath, path, filePath.toAbsolutePath());
 
             // 检查文件是否存在
             if (!Files.exists(filePath)) {
-                return ResponseEntity.ok(Result.error("文件不存在: " + path));
+                return ResponseEntity.ok(Result.error("文件不存在: " + path + ", 完整路径: " + filePath.toAbsolutePath()));
             }
 
             // 检查是否为文件
@@ -493,7 +508,7 @@ public class RepositoryController {
             WarehouseEntity warehouse = warehouseOpt.get();
 
             // 构建文件路径
-            String storagePath = "/data/koalawiki/git/" + getRepositoryIdentifier(warehouse.getUrl());
+            String storagePath = gitPathResolver.getStoragePath() + "/" + getRepositoryIdentifier(warehouse.getAddress());
             Path filePath = Paths.get(storagePath, path);
 
             // 确保父目录存在
@@ -510,38 +525,6 @@ public class RepositoryController {
         } catch (Exception e) {
             log.error("保存文件内容失败: id={}", id, e);
             return ResponseEntity.ok(Result.error("保存失败: " + e.getMessage()));
-        }
-    }
-
-    /**
-     * 获取文档目录
-     */
-    @GetMapping("/DocumentCatalogs")
-    public ResponseEntity<Result<List<DocumentCatalogResponse>>> getDocumentCatalogs(
-            @RequestParam @NotBlank String warehouseId) {
-
-        log.debug("获取文档目录: warehouseId={}", warehouseId);
-
-        try {
-            // 查找仓库
-            Optional<WarehouseEntity> warehouseOpt = warehouseRepository.findById(warehouseId);
-            if (!warehouseOpt.isPresent()) {
-                return ResponseEntity.ok(Result.error("仓库不存在"));
-            }
-
-            // 获取目录列表
-            List<DocumentCatalogEntity> catalogs = documentCatalogRepository.findCatalogTree(warehouseId);
-
-            // 转换为响应DTO
-            List<DocumentCatalogResponse> response = catalogs.stream()
-                    .map(this::convertToCatalogResponse)
-                    .collect(Collectors.toList());
-
-            return ResponseEntity.ok(Result.success(response));
-
-        } catch (Exception e) {
-            log.error("获取文档目录失败: warehouseId={}", warehouseId, e);
-            return ResponseEntity.ok(Result.error("获取文档目录失败: " + e.getMessage()));
         }
     }
 
@@ -600,9 +583,9 @@ public class RepositoryController {
             if (requestBody.containsKey("enableSync")) {
                 Object enableSyncObj = requestBody.get("enableSync");
                 if (enableSyncObj instanceof Boolean) {
-                    warehouse.setAutoSync((Boolean) enableSyncObj);
+                    warehouse.setEnableSync((Boolean) enableSyncObj);
                 } else if (enableSyncObj instanceof String) {
-                    warehouse.setAutoSync(Boolean.parseBoolean((String) enableSyncObj));
+                    warehouse.setEnableSync(Boolean.parseBoolean((String) enableSyncObj));
                 }
             }
 
@@ -678,7 +661,7 @@ public class RepositoryController {
             }
 
             WarehouseEntity warehouse = warehouseOpt.get();
-            String storagePath = "/data/koalawiki/git/" + getRepositoryIdentifier(warehouse.getUrl());
+            String storagePath = gitPathResolver.getStoragePath() + "/" + getRepositoryIdentifier(warehouse.getAddress());
             Path rootPath = Paths.get(storagePath);
 
             if (!Files.exists(rootPath) || !Files.isDirectory(rootPath)) {
@@ -749,7 +732,7 @@ public class RepositoryController {
                         .status(entity.getStatus() != null ? entity.getStatus().name() : null)
                         .version(entity.getVersion())
                         .viewCount(0L)
-                        .starCount(entity.getStarCount() != null ? entity.getStarCount().intValue() : 0);
+                        .starCount(entity.getStars() != null ? entity.getStars().intValue() : 0);
 
         collectFileStatistics(entity, builder);
 
@@ -767,19 +750,31 @@ public class RepositoryController {
     private void collectFileStatistics(WarehouseEntity entity,
                                        WarehouseStatsResponse.WarehouseStatsResponseBuilder builder) {
         try {
-            String storagePath = "/data/koalawiki/git/" + getRepositoryIdentifier(entity.getUrl());
+            String storagePath = "/data/koalawiki/git/" + getRepositoryIdentifier(entity.getAddress());
             Path rootPath = Paths.get(storagePath);
 
             if (Files.exists(rootPath) && Files.isDirectory(rootPath)) {
                 FileStatsCollector collector = new FileStatsCollector();
                 Files.walkFileTree(rootPath, collector);
 
+                // 获取最后同步时间
+                Long lastSyncTime = null;
+                try {
+                    IWarehouseSyncService.SyncStatusInfo syncStatus =
+                        warehouseSyncService.getSyncStatus(entity.getId());
+                    if (syncStatus != null && syncStatus.getLastSuccessSyncTime() != null) {
+                        lastSyncTime = syncStatus.getLastSuccessSyncTime().getTime();
+                    }
+                } catch (Exception e) {
+                    log.warn("获取同步状态失败: {}", entity.getId(), e);
+                }
+
                 builder.totalFiles(collector.getTotalFiles())
                        .documentFiles(collector.getDocumentFiles())
                        .totalSize(collector.getTotalSize())
                        .catalogCount(collector.getDirectoryCount())
                        .documentItemCount(collector.getDocumentFiles())
-                       .lastSyncTime(entity.getLastSyncTime() != null ? entity.getLastSyncTime().getTime() : null);
+                       .lastSyncTime(lastSyncTime);
             } else {
                 builder.totalFiles(0)
                        .documentFiles(0)
@@ -797,6 +792,60 @@ public class RepositoryController {
                    .documentItemCount(0)
                    .lastSyncTime(null);
         }
+    }
+
+    /**
+     * 查找仓库实际存储路径
+     * 尝试多种格式以兼容不同版本
+     */
+    private String findRepositoryPath(String repoUrl) {
+        String basePath = gitPathResolver.getStoragePath();
+        log.debug("查找仓库路径: repoUrl={}, basePath={}", repoUrl, basePath);
+
+        // 尝试格式1: 新版格式 (platform/owner/repo)
+        String path1 = gitPathResolver.getLocalPath(repoUrl);
+        log.debug("尝试路径1 (新版): {}", path1);
+        if (Files.exists(Paths.get(path1))) {
+            log.debug("找到仓库路径: {}", path1);
+            return path1;
+        }
+
+        // 尝试格式2: 旧版格式 (owner_repo)
+        String identifier = getRepositoryIdentifier(repoUrl);
+        String path2 = Paths.get(basePath, identifier).toString();
+        log.debug("尝试路径2 (旧版): {}", path2);
+        if (Files.exists(Paths.get(path2))) {
+            log.debug("找到仓库路径: {}", path2);
+            return path2;
+        }
+
+        // 尝试格式3: 扫描storage目录，查找包含repo名称的目录
+        GitRepoInfo info = parseGitUrl(repoUrl);
+        log.debug("解析Git URL: info={}", info != null ? info.getRepositoryName() : "null");
+        if (info != null && info.getRepositoryName() != null) {
+            try (Stream<Path> paths = Files.list(Paths.get(basePath))) {
+                String repoName = info.getRepositoryName();
+                Optional<Path> found = paths
+                    .filter(Files::isDirectory)
+                    .filter(p -> {
+                        String dirName = p.getFileName().toString();
+                        boolean matches = dirName.contains(repoName);
+                        log.debug("检查目录: {} contains {} ? {}", dirName, repoName, matches);
+                        return matches;
+                    })
+                    .findFirst();
+                if (found.isPresent()) {
+                    String foundPath = found.get().toString();
+                    log.debug("找到仓库路径 (扫描): {}", foundPath);
+                    return foundPath;
+                }
+            } catch (IOException e) {
+                log.warn("Failed to scan storage directory: {}", basePath, e);
+            }
+        }
+
+        log.warn("未找到仓库路径: repoUrl={}", repoUrl);
+        return null;
     }
 
     /**
@@ -842,22 +891,6 @@ public class RepositoryController {
     }
 
     /**
-     * 转换DocumentCatalogEntity为响应DTO
-     */
-    private DocumentCatalogResponse convertToCatalogResponse(DocumentCatalogEntity entity) {
-        DocumentCatalogResponse response = new DocumentCatalogResponse();
-        response.setId(entity.getId());
-        response.setName(entity.getName());
-        response.setUrl(entity.getUrl());
-        response.setDescription(entity.getDescription());
-        response.setParentId(entity.getParentId());
-        response.setOrder(entity.getOrder());
-        response.setWarehouseId(entity.getWarehouseId());
-        response.setIsCompleted(entity.getIsCompleted());
-        return response;
-    }
-
-    /**
      * 转换为响应DTO
      */
     private WarehouseResponse convertToResponse(WarehouseEntity entity) {
@@ -866,11 +899,11 @@ public class RepositoryController {
         response.setName(entity.getName());
         response.setOrganizationName(null); // Entity中没有这个字段
         response.setDescription(entity.getDescription());
-        response.setAddress(entity.getUrl());
-        response.setBranch(entity.getDefaultBranch());
+        response.setAddress(entity.getAddress());
+        response.setBranch(entity.getBranch());
         response.setStatus(entity.getStatus());
         response.setError(entity.getError());
-        response.setStars(entity.getStarCount() != null ? entity.getStarCount().intValue() : 0);
+        response.setStars(entity.getStars() != null ? entity.getStars().intValue() : 0);
         response.setForks(0); // Entity中没有forks字段
         response.setCreatedAt(entity.getCreatedAt());
         response.setUpdatedAt(null); // Entity中没有updatedAt字段
