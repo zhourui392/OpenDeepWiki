@@ -48,7 +48,21 @@ export interface GenerateDocsRequest {
 
 export const aiDocumentApi = {
   /**
-   * 触发文档生成
+   * 生成项目架构文档(新)
+   */
+  generateProjectDoc(warehouseId: string, request?: GenerateDocsRequest) {
+    return apiClient.post<{
+      documentId: string
+      title: string
+      message: string
+    }>(
+      `/v1/warehouses/${warehouseId}/generate-project-doc`,
+      request || {}
+    )
+  },
+
+  /**
+   * 触发文档生成(旧-按文件批量生成)
    */
   generateDocs(warehouseId: string, request?: GenerateDocsRequest) {
     return apiClient.post<string>(

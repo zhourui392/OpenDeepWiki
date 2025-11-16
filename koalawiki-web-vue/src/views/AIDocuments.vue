@@ -10,17 +10,30 @@
               自动生成代码技术文档
             </p>
           </div>
-          <button
-            @click="handleGenerate"
-            :disabled="generating"
-            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-            <svg v-if="generating" class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            {{ generating ? '生成中...' : '生成文档' }}
-          </button>
+          <div class="flex items-center gap-2">
+            <button
+              @click="handleGenerateProject"
+              :disabled="generating"
+              class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <svg v-if="generating" class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {{ generating ? '生成中...' : '生成架构文档' }}
+            </button>
+            <button
+              @click="handleGenerate"
+              :disabled="generating"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <svg v-if="generating" class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {{ generating ? '生成中...' : '批量生成文档' }}
+            </button>
+          </div>
         </div>
 
         <!-- Stats -->
@@ -39,7 +52,7 @@
           </div>
           <div class="bg-purple-50 rounded-lg p-4">
             <div class="text-sm text-purple-600 font-medium">成功率</div>
-            <div class="text-2xl font-bold text-purple-900 mt-1">{{ stats.successRate.toFixed(1) }}%</div>
+            <div class="text-2xl font-bold text-purple-900 mt-1">{{ (stats.successRate || 0).toFixed(1) }}%</div>
           </div>
         </div>
       </div>
@@ -221,9 +234,34 @@ const loadStats = async () => {
   }
 }
 
-// 触发生成
-const handleGenerate = async () => {
-  if (!confirm('确定要生成文档吗?这可能需要一些时间...')) {
+// 触发项目架构文档生成(新)
+const handleGenerateProject = async () => {
+  if (!confirm('确定要生成项目架构文档吗？这将扫描整个项目并分析架构...')) {
+    return
+  }
+
+  generating.value = true
+  try {
+    const response = await aiDocumentApi.generateProjectDoc(warehouseId.value, { agentType: 'claude' })
+    alert(`架构文档生成成功！\n标题: ${response.title}`)
+
+    // 立即刷新文档列表
+    await loadDocuments()
+    await loadStats()
+
+    // 自动打开文档
+    router.push(`/ai-documents/${response.documentId}`)
+  } catch (error: any) {
+    console.error('生成失败:', error)
+    alert('生成失败: ' + (error.response?.data?.message || error.message))
+  } finally {
+    generating.value = false
+  }
+}
+
+// 触发批量文档生成(旧)
+const handleGenerate = async () {
+  if (!confirm('确定要批量生成文档吗?这可能需要一些时间...')) {
     return
   }
 

@@ -3,6 +3,8 @@ package ai.opendw.koalawiki.app.service.ai;
 import ai.opendw.koalawiki.core.ai.AIAgent;
 import ai.opendw.koalawiki.core.ai.AIAgentFactory;
 import ai.opendw.koalawiki.core.ai.DocumentPromptBuilder;
+import ai.opendw.koalawiki.core.analysis.ProjectScanner;
+import ai.opendw.koalawiki.core.analysis.model.ProjectStructure;
 import ai.opendw.koalawiki.domain.ai.AIDocument;
 import ai.opendw.koalawiki.domain.ai.GenerationTask;
 import ai.opendw.koalawiki.infra.entity.AIDocumentEntity;
@@ -38,6 +40,7 @@ public class DocumentGenerationService {
     private final DocumentPromptBuilder promptBuilder;
     private final AIDocumentRepository documentRepository;
     private final GenerationTaskRepository taskRepository;
+    private final ProjectScanner projectScanner;
 
     /**
      * 为单个Java文件生成文档
@@ -120,7 +123,7 @@ public class DocumentGenerationService {
      * @param agentType Agent类型
      * @return 任务ID
      */
-    @Async("docGenExecutor")
+    @Async("documentProcessingExecutor")
     public CompletableFuture<String> generateBatch(String warehouseId,
                                                      List<File> javaFiles,
                                                      String agentType) {
@@ -164,6 +167,69 @@ public class DocumentGenerationService {
 
         log.info("批量生成完成: taskId={}, 成功={}, 失败={}", taskId, completed, failed);
         return CompletableFuture.completedFuture(taskId);
+    }
+
+    /**
+     * 为整个项目生成架构文档
+     *
+     * @param warehouseId 仓库ID
+     * @param projectPath 项目路径
+     * @param agentType Agent类型 (可选)
+     * @return 生成的文档
+     */
+    @Transactional
+    public AIDocument generateForProject(String warehouseId, String projectPath, String agentType) {
+        log.info("开始生成项目架构文档: warehouse={}, path={}", warehouseId, projectPath);
+
+        try {
+            // 1. 扫描项目结构
+            ProjectStructure structure = projectScanner.scanProject(projectPath);
+            log.info("项目扫描完成: 入口点数={}", structure.getEntryPoints().size());
+
+            // 2. 获取Agent
+            AIAgent agent = agentFactory.getAgent(agentType);
+            log.info("使用Agent: {}", agent.getName());
+
+            // 3. 构建提示词
+            String prompt = promptBuilder.buildProjectAnalysisPrompt(structure);
+            log.info("提示词长度: {}", prompt.length());
+
+            // 4. 执行生成
+            String content = agent.execute(prompt);
+
+            // 5. 保存到数据库
+            AIDocumentEntity entity = new AIDocumentEntity();
+            entity.setId(UUID.randomUUID().toString());
+            entity.setWarehouseId(warehouseId);
+            entity.setSourceFile(projectPath);
+            entity.setTitle(structure.getProjectName() + " - 架构文档");
+            entity.setContent(content);
+            entity.setStatus("COMPLETED");
+            entity.setAgentType(agent.getName());
+
+            documentRepository.save(entity);
+
+            log.info("项目架构文档生成成功: documentId={}", entity.getId());
+            return toDocument(entity);
+
+        } catch (Exception e) {
+            log.error("项目架构文档生成失败: {}", projectPath, e);
+
+            // 保存失败记录
+            AIDocumentEntity entity = new AIDocumentEntity();
+            entity.setId(UUID.randomUUID().toString());
+            entity.setWarehouseId(warehouseId);
+            entity.setSourceFile(projectPath);
+            entity.setTitle("架构文档(失败)");
+            entity.setContent("");
+            entity.setStatus("FAILED");
+            entity.setAgentType(agentType);
+            entity.setErrorMessage(e.getMessage());
+
+            documentRepository.save(entity);
+
+            throw new RuntimeException("项目架构文档生成失败: " + e.getMessage(), e);
+        }
     }
 
     /**
