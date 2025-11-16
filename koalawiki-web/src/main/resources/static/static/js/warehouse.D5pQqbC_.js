@@ -1,0 +1,1 @@
+import{a as r}from"./client.BEvNY8Ai.js";const s={getWarehouseList(e,t,a){return r.get("/Warehouse/WarehouseList",{params:{page:e,pageSize:t,keyword:a}})},getWarehouse(e){return r.get("/Repository/Repository",{params:{id:e}})},getDocumentTree(e){return r.get("/Warehouse/GetDocumentTree",{params:{warehouseId:e}})}};export{s as w};

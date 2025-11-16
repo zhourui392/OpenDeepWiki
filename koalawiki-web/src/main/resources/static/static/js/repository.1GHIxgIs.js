@@ -1,1 +1,0 @@
-var d=(n=>(n[n.Pending=0]="Pending",n[n.Processing=1]="Processing",n[n.Completed=2]="Completed",n[n.Canceled=3]="Canceled",n[n.Unauthorized=4]="Unauthorized",n[n.Failed=99]="Failed",n))(d||{});export{d as W};
