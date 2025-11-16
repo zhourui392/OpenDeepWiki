@@ -185,126 +185,126 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { aiDocumentApi, type AIDocument, type DocStats } from '@/api/ai-document'
+import { ref, onMounted, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { aiDocumentApi, type AIDocument, type DocStats } from '@/api/ai-document';
 
-const route = useRoute()
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 
-const warehouseId = computed(() => route.params.id as string)
-const documents = ref<AIDocument[]>([])
-const stats = ref<DocStats | null>(null)
-const loading = ref(false)
-const generating = ref(false)
-const searchKeyword = ref('')
-const filterStatus = ref('')
-const currentPage = ref(0)
-const pageSize = ref(20)
-const totalPages = ref(0)
-const totalElements = ref(0)
+const warehouseId = computed(() => route.params.id as string);
+const documents = ref<AIDocument[]>([]);
+const stats = ref<DocStats | null>(null);
+const loading = ref(false);
+const generating = ref(false);
+const searchKeyword = ref('');
+const filterStatus = ref('');
+const currentPage = ref(0);
+const pageSize = ref(20);
+const totalPages = ref(0);
+const totalElements = ref(0);
 
 // 加载文档列表
 const loadDocuments = async () => {
-  loading.value = true
+  loading.value = true;
   try {
     const response = await aiDocumentApi.listDocuments(warehouseId.value, {
       page: currentPage.value,
       size: pageSize.value,
       status: filterStatus.value || undefined
-    })
+    });
 
-    documents.value = response.content
-    totalPages.value = response.totalPages
-    totalElements.value = response.totalElements
+    documents.value = response.content;
+    totalPages.value = response.totalPages;
+    totalElements.value = response.totalElements;
   } catch (error: any) {
-    console.error('加载文档失败:', error)
-    alert('加载文档失败: ' + (error.response?.data?.message || error.message))
+    console.error('加载文档失败:', error);
+    alert('加载文档失败: ' + (error.response?.data?.message || error.message));
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 // 加载统计信息
 const loadStats = async () => {
   try {
-    stats.value = await aiDocumentApi.getDocStats(warehouseId.value)
+    stats.value = await aiDocumentApi.getDocStats(warehouseId.value);
   } catch (error: any) {
-    console.error('加载统计失败:', error)
+    console.error('加载统计失败:', error);
   }
-}
+};
 
-// 触发项目架构文档生成(新)
+// 生成项目架构文档
 const handleGenerateProject = async () => {
   if (!confirm('确定要生成项目架构文档吗？这将扫描整个项目并分析架构...')) {
-    return
+    return;
   }
 
-  generating.value = true
+  generating.value = true;
   try {
-    const response = await aiDocumentApi.generateProjectDoc(warehouseId.value, { agentType: 'claude' })
-    alert(`架构文档生成成功！\n标题: ${response.title}`)
+    const response = await aiDocumentApi.generateProjectDoc(warehouseId.value, { agentType: 'claude' });
+    alert(`架构文档生成成功！\n标题: ${response.title}`);
 
     // 立即刷新文档列表
-    await loadDocuments()
-    await loadStats()
+    await loadDocuments();
+    await loadStats();
 
     // 自动打开文档
-    router.push(`/ai-documents/${response.documentId}`)
+    router.push(`/ai-documents/${response.documentId}`);
   } catch (error: any) {
-    console.error('生成失败:', error)
-    alert('生成失败: ' + (error.response?.data?.message || error.message))
+    console.error('生成失败:', error);
+    alert('生成失败: ' + (error.response?.data?.message || error.message));
   } finally {
-    generating.value = false
+    generating.value = false;
   }
-}
+};
 
-// 触发批量文档生成(旧)
-const handleGenerate = async () {
-  if (!confirm('确定要批量生成文档吗?这可能需要一些时间...')) {
-    return
+// 批量生成文档
+const handleGenerate = async () => {
+  if (!confirm('确定要批量生成文档吗？这可能需要一些时间...')) {
+    return;
   }
 
-  generating.value = true
+  generating.value = true;
   try {
-    await aiDocumentApi.generateDocs(warehouseId.value, { agentType: 'claude' })
-    alert('文档生成任务已启动,请稍候刷新查看')
+    await aiDocumentApi.generateDocs(warehouseId.value, { agentType: 'claude' });
+    alert('文档生成任务已启动，请稍候刷新查看');
 
     // 5秒后自动刷新
     setTimeout(() => {
-      loadDocuments()
-      loadStats()
-    }, 5000)
+      loadDocuments();
+      loadStats();
+    }, 5000);
   } catch (error: any) {
-    console.error('生成失败:', error)
-    alert('生成失败: ' + (error.response?.data?.message || error.message))
+    console.error('生成失败:', error);
+    alert('生成失败: ' + (error.response?.data?.message || error.message));
   } finally {
-    generating.value = false
+    generating.value = false;
   }
-}
+};
 
 // 查看文档
 const handleView = (doc: AIDocument) => {
-  router.push(`/ai-documents/${doc.id}`)
-}
+  router.push(`/ai-documents/${doc.id}`);
+};
 
 // 搜索处理
-let searchTimeout: NodeJS.Timeout
+let searchTimeout: NodeJS.Timeout;
 const handleSearch = () => {
-  clearTimeout(searchTimeout)
+  clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => {
-    currentPage.value = 0
-    loadDocuments()
-  }, 500)
-}
+    currentPage.value = 0;
+    loadDocuments();
+  }, 500);
+};
 
 // 翻页
 const goToPage = (page: number) => {
   if (page >= 0 && page < totalPages.value) {
-    currentPage.value = page
-    loadDocuments()
+    currentPage.value = page;
+    loadDocuments();
   }
-}
+};
 
 // 状态样式
 const getStatusClass = (status: string) => {
@@ -312,9 +312,9 @@ const getStatusClass = (status: string) => {
     'COMPLETED': 'bg-green-100 text-green-800',
     'DRAFT': 'bg-yellow-100 text-yellow-800',
     'FAILED': 'bg-red-100 text-red-800'
-  }
-  return classes[status as keyof typeof classes] || 'bg-gray-100 text-gray-800'
-}
+  };
+  return classes[status as keyof typeof classes] || 'bg-gray-100 text-gray-800';
+};
 
 // 状态文本
 const getStatusText = (status: string) => {
@@ -322,25 +322,25 @@ const getStatusText = (status: string) => {
     'COMPLETED': '已完成',
     'DRAFT': '生成中',
     'FAILED': '失败'
-  }
-  return texts[status as keyof typeof texts] || status
-}
+  };
+  return texts[status as keyof typeof texts] || status;
+};
 
 // 格式化日期
 const formatDate = (dateStr: string) => {
-  const date = new Date(dateStr)
+  const date = new Date(dateStr);
   return date.toLocaleString('zh-CN', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit'
-  })
-}
+  });
+};
 
 // 初始化
 onMounted(() => {
-  loadDocuments()
-  loadStats()
-})
+  loadDocuments();
+  loadStats();
+});
 </script>
