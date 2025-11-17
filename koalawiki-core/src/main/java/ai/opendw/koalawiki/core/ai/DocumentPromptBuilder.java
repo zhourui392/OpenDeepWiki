@@ -1,8 +1,10 @@
 package ai.opendw.koalawiki.core.ai;
 
 import ai.opendw.koalawiki.core.analysis.model.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -16,7 +18,10 @@ import java.util.stream.Collectors;
  * @since 2025-11-16
  */
 @Component
+@RequiredArgsConstructor
 public class DocumentPromptBuilder {
+
+    private final PromptTemplateService promptTemplateService;
 
     /**
      * 构建项目级架构分析提示词
@@ -185,46 +190,10 @@ public class DocumentPromptBuilder {
             prompt.append("\n");
         }
 
-        // 7. 分析要求
+        // 7. 从数据库加载输出要求模板
         prompt.append("---\n\n");
-        prompt.append("## 输出要求\n\n");
-        prompt.append("**重要**: 请直接输出完整的Markdown格式项目架构文档，不要输出总结或说明，直接从文档标题开始。\n\n");
-        prompt.append("文档必须包含以下章节：\n\n");
-        prompt.append("# [项目名称] 架构文档\n\n");
-        prompt.append("## 1. 项目概述\n");
-        prompt.append("- 项目的整体功能和定位\n");
-        prompt.append("- 技术栈分析（基于识别的框架和组件）\n");
-        prompt.append("- 架构风格（单体/微服务等）\n\n");
-
-        prompt.append("## 2. 模块结构\n");
-        prompt.append("- 项目的模块划分\n");
-        prompt.append("- 各模块的职责和功能\n\n");
-
-        prompt.append("## 3. 服务功能清单\n");
-        prompt.append("- 按功能域对HTTP接口进行分组\n");
-        prompt.append("- 列出每个功能域的主要接口和功能\n\n");
-
-        prompt.append("## 4. 服务入口汇总\n");
-        prompt.append("- HTTP接口的功能分类\n");
-        prompt.append("- Dubbo服务的对外能力\n");
-        prompt.append("- 定时任务的调度说明\n");
-        prompt.append("- MQ消费的业务场景\n\n");
-
-        prompt.append("## 5. 核心业务链路\n");
-        prompt.append("- 识别3-5个核心业务流程\n");
-        prompt.append("- 描述每个流程的调用链路\n");
-        prompt.append("- 标注关键的业务节点\n\n");
-
-        prompt.append("## 6. 架构特点和建议\n");
-        prompt.append("- 当前架构的优点\n");
-        prompt.append("- 潜在的改进点\n");
-        prompt.append("- 技术债务提示\n\n");
-
-        prompt.append("**格式要求**：\n");
-        prompt.append("- 直接输出Markdown文档内容，不要有任何前言或总结\n");
-        prompt.append("- 使用表格和列表增强可读性\n");
-        prompt.append("- 使用中文编写\n");
-        prompt.append("- 重点突出业务价值和架构设计\n");
+        String outputTemplate = promptTemplateService.loadTemplate("project_analysis", "claude");
+        prompt.append(outputTemplate);
 
         return prompt.toString();
     }
@@ -237,39 +206,13 @@ public class DocumentPromptBuilder {
      * @return 提示词文本
      */
     public String buildChinesePrompt(String code, Map<String, Object> context) {
-        String className = (String) context.getOrDefault("className", "Unknown");
-        String packageName = (String) context.getOrDefault("packageName", "");
-        String language = (String) context.getOrDefault("language", "java");
+        Map<String, String> variables = new HashMap<>();
+        variables.put("className", (String) context.getOrDefault("className", "Unknown"));
+        variables.put("packageName", (String) context.getOrDefault("packageName", ""));
+        variables.put("language", (String) context.getOrDefault("language", "java"));
+        variables.put("code", code != null ? code : "");
 
-        return "请为以下" + language + "类生成详细的技术文档。\n\n" +
-            "类名: " + className + "\n" +
-            "包名: " + packageName + "\n\n" +
-            "源代码:\n" +
-            "```" + language + "\n" +
-            code + "\n" +
-            "```\n\n" +
-            "请按以下格式生成Markdown文档:\n\n" +
-            "# " + className + "\n\n" +
-            "## 概述\n" +
-            "(用2-3句话描述这个类的作用和职责)\n\n" +
-            "## 核心功能\n" +
-            "(列出主要功能点,每个功能点一段简短描述)\n\n" +
-            "## 主要方法\n" +
-            "(为每个public方法生成说明,包括:\n" +
-            "- 方法签名\n" +
-            "- 功能描述\n" +
-            "- 参数说明\n" +
-            "- 返回值说明\n" +
-            "- 简单的使用示例)\n\n" +
-            "## 使用示例\n" +
-            "(提供1-2个实际使用示例代码)\n\n" +
-            "## 注意事项\n" +
-            "(如有特殊注意事项,列出来)\n\n" +
-            "要求:\n" +
-            "1. 使用清晰简洁的中文\n" +
-            "2. 代码示例使用" + language + "语法高亮\n" +
-            "3. 重点突出类的设计意图和使用场景\n" +
-            "4. 避免过度技术化的术语\n";
+        return promptTemplateService.loadAndRender("class_chinese", "claude", variables);
     }
 
     /**
@@ -280,39 +223,13 @@ public class DocumentPromptBuilder {
      * @return 提示词文本
      */
     public String buildEnglishPrompt(String code, Map<String, Object> context) {
-        String className = (String) context.getOrDefault("className", "Unknown");
-        String packageName = (String) context.getOrDefault("packageName", "");
-        String language = (String) context.getOrDefault("language", "java");
+        Map<String, String> variables = new HashMap<>();
+        variables.put("className", (String) context.getOrDefault("className", "Unknown"));
+        variables.put("packageName", (String) context.getOrDefault("packageName", ""));
+        variables.put("language", (String) context.getOrDefault("language", "java"));
+        variables.put("code", code != null ? code : "");
 
-        return "Generate detailed technical documentation for the following " + language + " class.\n\n" +
-            "Class Name: " + className + "\n" +
-            "Package: " + packageName + "\n\n" +
-            "Source Code:\n" +
-            "```" + language + "\n" +
-            code + "\n" +
-            "```\n\n" +
-            "Please generate Markdown documentation with:\n\n" +
-            "# " + className + "\n\n" +
-            "## Overview\n" +
-            "(2-3 sentences describing the purpose and responsibility)\n\n" +
-            "## Core Features\n" +
-            "(List main features with brief descriptions)\n\n" +
-            "## Main Methods\n" +
-            "(Document each public method with:\n" +
-            "- Method signature\n" +
-            "- Description\n" +
-            "- Parameters\n" +
-            "- Return value\n" +
-            "- Usage example)\n\n" +
-            "## Usage Examples\n" +
-            "(Provide 1-2 practical code examples)\n\n" +
-            "## Notes\n" +
-            "(Any special considerations)\n\n" +
-            "Requirements:\n" +
-            "1. Use clear and concise language\n" +
-            "2. Use " + language + " syntax highlighting for code examples\n" +
-            "3. Focus on design intent and usage scenarios\n" +
-            "4. Avoid overly technical jargon\n";
+        return promptTemplateService.loadAndRender("class_english", "codex", variables);
     }
 
     /**
