@@ -51,7 +51,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           'vue-vendor': ['vue', 'vue-router', 'pinia'],
-          'markdown': ['markdown-it', 'markdown-it-katex', 'katex', 'highlight.js'],
+          'markdown': ['unified', 'remark-parse', 'remark-gfm', 'remark-math', 'remark-rehype', 'rehype-highlight', 'rehype-slug', 'rehype-autolink-headings', 'rehype-katex', 'rehype-stringify', 'katex', 'highlight.js'],
           'utils': ['axios']
         },
         chunkFileNames: 'static/js/[name].[hash].js',

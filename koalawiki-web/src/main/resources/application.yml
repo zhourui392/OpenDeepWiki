@@ -70,7 +70,7 @@ management:
 # Git配置
 koalawiki:
   git:
-    storage-path: ${GIT_STORAGE_PATH:/data/koalawiki/git}
+    storage-path: ${GIT_STORAGE_PATH:D:/data/koalawiki/git}
     max-depth: 0
     timeout: 300000
     cache-cleanup-days: 30
@@ -83,7 +83,7 @@ koalawiki:
     api-endpoint: ${OPENAI_API_ENDPOINT:https://api.openai.com/v1}
     chat-model: gpt-5.1
     analysis-model: gpt-5.1-high
-    timeout: 60000
+    timeout: 600000
     max-retries: 3
     retry-delay: 1000
     cache:
@@ -103,4 +103,4 @@ ai:
     codex: codex
 
   # 超时时间(毫秒)
-  timeout: 60000
+  timeout: 600000

@@ -10,7 +10,9 @@
 - Tailwind CSS 4.x
 - Vue Router 4.x
 - Axios
-- markdown-it + KaTeX + highlight.js
+- remark + rehype (Markdown 渲染)
+- KaTeX (数学公式)
+- highlight.js (代码高亮 - Atom One Dark 主题)
 
 ## 开发
 

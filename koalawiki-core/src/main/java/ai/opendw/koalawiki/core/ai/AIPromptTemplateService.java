@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 
 /**
- * AI提示词模板服务
+ * AI提示词模板服务（数据库版）
  *
  * <p>职责: 从数据库加载和管理AI提示词模板</p>
  *
@@ -20,7 +20,7 @@ import java.util.Map;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PromptTemplateService {
+public class AIPromptTemplateService {
 
     private final AIPromptTemplateRepository templateRepository;
 

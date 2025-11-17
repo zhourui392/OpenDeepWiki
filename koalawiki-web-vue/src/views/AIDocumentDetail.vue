@@ -100,40 +100,28 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { aiDocumentApi, type AIDocument } from '@/api/ai-document'
-import MarkdownIt from 'markdown-it'
-import hljs from 'highlight.js'
+import { useMarkdown } from '@/composables/useMarkdown'
 
 const route = useRoute()
-const router = useRouter()
 
 const document = ref<AIDocument | null>(null)
 const loading = ref(false)
 const error = ref('')
 
-// Markdown渲染器配置
-const md = new MarkdownIt({
-  html: true,
-  linkify: true,
-  typographer: true,
-  highlight: (str: string, lang: string) => {
-    if (lang && hljs.getLanguage(lang)) {
-      try {
-        return `<pre class="hljs"><code>${hljs.highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`
-      } catch (err) {
-        console.error('Highlight error:', err)
-      }
-    }
-    return `<pre class="hljs"><code>${md.utils.escapeHtml(str)}</code></pre>`
-  }
+// 使用新的 remark/rehype 渲染器
+const { render } = useMarkdown({
+  enableKatex: true,
+  enableAnchor: false,
+  enableHighlight: true
 })
 
 // 渲染的内容
 const renderedContent = computed(() => {
   if (!document.value?.content) return ''
   try {
-    return md.render(document.value.content)
+    return render(document.value.content)
   } catch (err) {
     console.error('Markdown render error:', err)
     return '<div class="text-red-500">文档渲染失败</div>'
@@ -147,7 +135,7 @@ const loadDocument = async () => {
 
   try {
     const id = route.params.id as string
-    document.value = await aiDocumentApi.getDocument(id)
+    document.value = await aiDocumentApi.getDocument(id) as any
   } catch (err: any) {
     console.error('加载文档失败:', err)
     error.value = '加载文档失败: ' + (err.response?.data?.message || err.message)
@@ -195,119 +183,128 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-/* Markdown样式 */
+<style>
+@import 'highlight.js/styles/atom-one-dark.css';
+@import 'katex/dist/katex.min.css';
+
 .markdown-body {
-  line-height: 1.6;
-  color: #333;
+  color: #1f2937;
+  line-height: 1.75;
+  font-size: 16px;
 }
 
 .markdown-body h1 {
-  font-size: 2em;
-  font-weight: bold;
-  margin-top: 1em;
-  margin-bottom: 0.5em;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-top: 2.5rem;
+  margin-bottom: 1.25rem;
   border-bottom: 2px solid #e5e7eb;
-  padding-bottom: 0.3em;
+  padding-bottom: 0.75rem;
+  color: #111827;
 }
 
 .markdown-body h2 {
-  font-size: 1.5em;
-  font-weight: bold;
-  margin-top: 1em;
-  margin-bottom: 0.5em;
-  border-bottom: 1px solid #e5e7eb;
-  padding-bottom: 0.3em;
+  font-size: 1.625rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: #111827;
 }
 
 .markdown-body h3 {
-  font-size: 1.25em;
-  font-weight: bold;
-  margin-top: 1em;
-  margin-bottom: 0.5em;
+  font-size: 1.375rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: #1f2937;
 }
 
 .markdown-body p {
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
+  margin-bottom: 1.25rem;
+  color: #374151;
 }
 
-.markdown-body ul, .markdown-body ol {
-  padding-left: 2em;
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
-}
-
-.markdown-body li {
-  margin-top: 0.25em;
-  margin-bottom: 0.25em;
+.markdown-body pre {
+  background-color: #282c34;
+  border-radius: 0.625rem;
+  padding: 1.25rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .markdown-body code {
   background-color: #f3f4f6;
-  padding: 0.2em 0.4em;
+  color: #e11d48;
+  padding: 0.2rem 0.4rem;
   border-radius: 0.25rem;
   font-size: 0.875em;
-  font-family: 'Courier New', monospace;
-}
-
-.markdown-body pre {
-  background-color: #1e293b;
-  color: #e2e8f0;
-  padding: 1em;
-  border-radius: 0.5rem;
-  overflow-x: auto;
-  margin-top: 1em;
-  margin-bottom: 1em;
+  font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
 }
 
 .markdown-body pre code {
   background-color: transparent;
+  color: #abb2bf;
   padding: 0;
-  color: inherit;
-  font-size: 0.875em;
+  font-size: 0.875rem;
 }
 
 .markdown-body blockquote {
-  border-left: 4px solid #e5e7eb;
-  padding-left: 1em;
-  color: #6b7280;
-  margin: 1em 0;
+  border-left: 4px solid #3b82f6;
+  background-color: #f0f9ff;
+  padding: 1rem 1.5rem;
+  margin: 1.5rem 0;
+  border-radius: 0.375rem;
+  color: #1e40af;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  margin: 1rem 0;
+  padding-left: 2rem;
+}
+
+.markdown-body li {
+  margin: 0.5rem 0;
+  color: #374151;
 }
 
 .markdown-body table {
-  border-collapse: collapse;
   width: 100%;
-  margin: 1em 0;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  overflow: hidden;
 }
 
-.markdown-body table th,
-.markdown-body table td {
+.markdown-body th {
+  background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
+  font-weight: 600;
+  padding: 0.75rem 1rem;
   border: 1px solid #e5e7eb;
-  padding: 0.5em 1em;
   text-align: left;
+  color: #111827;
 }
 
-.markdown-body table th {
+.markdown-body td {
+  padding: 0.75rem 1rem;
+  border: 1px solid #e5e7eb;
+  color: #374151;
+}
+
+.markdown-body tr:hover {
   background-color: #f9fafb;
-  font-weight: bold;
 }
 
 .markdown-body a {
-  color: #3b82f6;
+  color: #2563eb;
   text-decoration: none;
+  font-weight: 500;
 }
 
 .markdown-body a:hover {
+  color: #1d4ed8;
   text-decoration: underline;
-}
-
-/* 代码高亮样式 */
-.hljs {
-  background-color: #1e293b;
-  color: #e2e8f0;
-  padding: 1em;
-  border-radius: 0.5rem;
-  overflow-x: auto;
 }
 </style>

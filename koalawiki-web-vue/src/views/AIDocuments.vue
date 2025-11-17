@@ -208,7 +208,7 @@ const totalElements = ref(0);
 const loadDocuments = async () => {
   loading.value = true;
   try {
-    const response = await aiDocumentApi.listDocuments(warehouseId.value, {
+    const response: any = await aiDocumentApi.listDocuments(warehouseId.value, {
       page: currentPage.value,
       size: pageSize.value,
       status: filterStatus.value || undefined
@@ -228,7 +228,7 @@ const loadDocuments = async () => {
 // 加载统计信息
 const loadStats = async () => {
   try {
-    stats.value = await aiDocumentApi.getDocStats(warehouseId.value);
+    stats.value = await aiDocumentApi.getDocStats(warehouseId.value) as any;
   } catch (error: any) {
     console.error('加载统计失败:', error);
   }
@@ -242,7 +242,7 @@ const handleGenerateProject = async () => {
 
   generating.value = true;
   try {
-    const response = await aiDocumentApi.generateProjectDoc(warehouseId.value, { agentType: 'claude' });
+    const response: any = await aiDocumentApi.generateProjectDoc(warehouseId.value, { agentType: 'claude' });
     alert(`架构文档生成成功！\n标题: ${response.title}`);
 
     // 立即刷新文档列表
@@ -289,13 +289,13 @@ const handleView = (doc: AIDocument) => {
 };
 
 // 搜索处理
-let searchTimeout: NodeJS.Timeout;
+let searchTimeout: number;
 const handleSearch = () => {
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => {
     currentPage.value = 0;
     loadDocuments();
-  }, 500);
+  }, 500) as any;
 };
 
 // 翻页
