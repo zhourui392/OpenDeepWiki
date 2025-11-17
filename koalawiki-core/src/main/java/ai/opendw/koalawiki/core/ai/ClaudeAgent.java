@@ -5,6 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+
 /**
  * Claude Agent 实现
  *
@@ -29,18 +35,13 @@ public class ClaudeAgent implements AIAgent {
         log.info("ClaudeAgent开始执行，提示词长度: {}", prompt.length());
 
         try {
-            // 构建Claude CLI命令
             String[] command = {
                 claudeCommand,
-                "-p",  // print模式，执行后退出
-                "--output-format", "text",  // 纯文本输出
-                "--tools", "Read",  // 只允许读取工具（安全考虑）
-                prompt
+                "-p",
+                "--output-format", "text"
             };
 
-            // 执行CLI
-            String result = cliExecutor.execute(command);
-
+            String result = cliExecutor.executeWithInput(command, prompt);
             log.info("ClaudeAgent执行完成，输出长度: {}", result.length());
             return result;
 

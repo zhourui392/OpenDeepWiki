@@ -1,10 +1,7 @@
 package ai.opendw.koalawiki.web.controller;
 
 import ai.opendw.koalawiki.app.service.ai.DocumentGenerationService;
-import ai.opendw.koalawiki.core.git.GitCredentials;
-import ai.opendw.koalawiki.core.git.GitPathResolver;
-import ai.opendw.koalawiki.core.git.GitRepositoryInfo;
-import ai.opendw.koalawiki.core.git.GitRepositoryManager;
+import ai.opendw.koalawiki.core.git.*;
 import ai.opendw.koalawiki.domain.ai.AIDocument;
 import ai.opendw.koalawiki.domain.ai.GenerationTask;
 import ai.opendw.koalawiki.infra.entity.AIDocumentEntity;
@@ -47,6 +44,7 @@ public class AIDocumentController {
     private final WarehouseRepository warehouseRepository;
     private final GitPathResolver gitPathResolver;
     private final GitRepositoryManager gitRepositoryManager;
+    private final GitService gitService;
 
     /**
      * 触发项目架构文档生成(新)
@@ -63,13 +61,23 @@ public class AIDocumentController {
             WarehouseEntity warehouse = warehouseRepository.findById(warehouseId)
                     .orElseThrow(() -> new RuntimeException("仓库不存在: " + warehouseId));
 
-            // 2. 获取项目路径
+            // 2. 克隆或更新仓库
             String gitAddress = warehouse.getAddress();
             if (gitAddress == null || gitAddress.trim().isEmpty()) {
                 return ApiResponse.error(400, "仓库地址为空");
             }
 
-            String localPath = gitPathResolver.getLocalPath(gitAddress);
+            GitCredentials credentials = null;
+            if (warehouse.getGitUserName() != null && warehouse.getGitPassword() != null) {
+                credentials = GitCredentials.builder()
+                        .type(GitCredentials.CredentialType.HTTP_BASIC)
+                        .username(warehouse.getGitUserName())
+                        .password(warehouse.getGitPassword())
+                        .build();
+            }
+
+            GitRepositoryInfo repoInfo = gitService.cloneRepository(gitAddress, credentials);
+            String localPath = repoInfo.getLocalPath();
 
             // 3. 生成项目架构文档
             String agentType = request != null ? request.getAgentType() : null;

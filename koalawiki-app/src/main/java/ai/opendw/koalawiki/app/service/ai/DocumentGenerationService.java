@@ -197,15 +197,21 @@ public class DocumentGenerationService {
             // 4. 执行生成
             String content = agent.execute(prompt);
 
-            // 5. 保存到数据库
-            AIDocumentEntity entity = new AIDocumentEntity();
-            entity.setId(UUID.randomUUID().toString());
-            entity.setWarehouseId(warehouseId);
-            entity.setSourceFile(projectPath);
+            // 5. 保存到数据库（存在则更新）
+            AIDocumentEntity entity = documentRepository.findByWarehouseIdAndSourceFile(warehouseId, projectPath)
+                    .orElse(new AIDocumentEntity());
+
+            if (entity.getId() == null) {
+                entity.setId(UUID.randomUUID().toString());
+                entity.setWarehouseId(warehouseId);
+                entity.setSourceFile(projectPath);
+            }
+
             entity.setTitle(structure.getProjectName() + " - 架构文档");
             entity.setContent(content);
             entity.setStatus("COMPLETED");
             entity.setAgentType(agent.getName());
+            entity.setUpdatedAt(new Date());
 
             documentRepository.save(entity);
 

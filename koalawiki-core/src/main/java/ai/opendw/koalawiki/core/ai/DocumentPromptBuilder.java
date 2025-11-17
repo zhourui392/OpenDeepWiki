@@ -187,39 +187,41 @@ public class DocumentPromptBuilder {
 
         // 7. 分析要求
         prompt.append("---\n\n");
-        prompt.append("## 文档生成要求\n\n");
-        prompt.append("请根据以上信息生成完整的项目架构文档，包括：\n\n");
-        prompt.append("### 1. 项目概述\n");
+        prompt.append("## 输出要求\n\n");
+        prompt.append("**重要**: 请直接输出完整的Markdown格式项目架构文档，不要输出总结或说明，直接从文档标题开始。\n\n");
+        prompt.append("文档必须包含以下章节：\n\n");
+        prompt.append("# [项目名称] 架构文档\n\n");
+        prompt.append("## 1. 项目概述\n");
         prompt.append("- 项目的整体功能和定位\n");
         prompt.append("- 技术栈分析（基于识别的框架和组件）\n");
         prompt.append("- 架构风格（单体/微服务等）\n\n");
 
-        prompt.append("### 2. 模块结构\n");
+        prompt.append("## 2. 模块结构\n");
         prompt.append("- 项目的模块划分\n");
         prompt.append("- 各模块的职责和功能\n\n");
 
-        prompt.append("### 3. 服务功能清单\n");
+        prompt.append("## 3. 服务功能清单\n");
         prompt.append("- 按功能域对HTTP接口进行分组\n");
         prompt.append("- 列出每个功能域的主要接口和功能\n\n");
 
-        prompt.append("### 4. 服务入口汇总\n");
+        prompt.append("## 4. 服务入口汇总\n");
         prompt.append("- HTTP接口的功能分类\n");
         prompt.append("- Dubbo服务的对外能力\n");
         prompt.append("- 定时任务的调度说明\n");
         prompt.append("- MQ消费的业务场景\n\n");
 
-        prompt.append("### 5. 核心业务链路\n");
+        prompt.append("## 5. 核心业务链路\n");
         prompt.append("- 识别3-5个核心业务流程\n");
         prompt.append("- 描述每个流程的调用链路\n");
         prompt.append("- 标注关键的业务节点\n\n");
 
-        prompt.append("### 6. 架构特点和建议\n");
+        prompt.append("## 6. 架构特点和建议\n");
         prompt.append("- 当前架构的优点\n");
         prompt.append("- 潜在的改进点\n");
         prompt.append("- 技术债务提示\n\n");
 
         prompt.append("**格式要求**：\n");
-        prompt.append("- 使用Markdown格式\n");
+        prompt.append("- 直接输出Markdown文档内容，不要有任何前言或总结\n");
         prompt.append("- 使用表格和列表增强可读性\n");
         prompt.append("- 使用中文编写\n");
         prompt.append("- 重点突出业务价值和架构设计\n");
