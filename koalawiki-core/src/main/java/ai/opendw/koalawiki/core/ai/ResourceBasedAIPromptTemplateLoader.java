@@ -98,7 +98,9 @@ public class ResourceBasedAIPromptTemplateLoader {
                 log.debug("模板文件不存在: {}", path);
                 return null;
             }
-            return resource.getContentAsString(StandardCharsets.UTF_8);
+            byte[] bytes = new byte[(int) resource.contentLength()];
+            resource.getInputStream().read(bytes);
+            return new String(bytes, StandardCharsets.UTF_8);
         } catch (IOException e) {
             log.debug("读取模板文件失败: {}, 原因: {}", path, e.getMessage());
             return null;
