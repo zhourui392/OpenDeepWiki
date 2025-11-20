@@ -70,6 +70,16 @@
             />
           </div>
           <select
+            v-model="filterService"
+            @change="loadDocuments"
+            class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="">全部服务</option>
+            <option v-for="svc in services" :key="svc.serviceId" :value="svc.serviceId">
+              {{ svc.serviceName }}
+            </option>
+          </select>
+          <select
             v-model="filterStatus"
             @change="loadDocuments"
             class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -188,16 +198,19 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { aiDocumentApi, type AIDocument, type DocStats } from '@/api/ai-document';
+import { serviceDocumentApi, type ServiceDocumentLibrary } from '@/api/service-document';
 
 const route = useRoute();
 const router = useRouter();
 
 const warehouseId = computed(() => route.params.id as string);
 const documents = ref<AIDocument[]>([]);
+const services = ref<ServiceDocumentLibrary[]>([]);
 const stats = ref<DocStats | null>(null);
 const loading = ref(false);
 const generating = ref(false);
 const searchKeyword = ref('');
+const filterService = ref('');
 const filterStatus = ref('');
 const currentPage = ref(0);
 const pageSize = ref(20);
@@ -338,8 +351,19 @@ const formatDate = (dateStr: string) => {
   });
 };
 
+// 加载服务列表
+const loadServices = async () => {
+  try {
+    const response: any = await serviceDocumentApi.listServices(warehouseId.value);
+    services.value = response.data || [];
+  } catch (error: any) {
+    console.error('加载服务列表失败:', error);
+  }
+};
+
 // 初始化
 onMounted(() => {
+  loadServices();
   loadDocuments();
   loadStats();
 });
