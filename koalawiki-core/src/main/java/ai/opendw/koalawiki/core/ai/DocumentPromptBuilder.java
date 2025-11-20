@@ -215,6 +215,29 @@ public class DocumentPromptBuilder {
         return promptTemplateLoader.loadAndRender("class_chinese", "claude", variables);
     }
 
+    /**
+     * 构建服务文档提示词
+     *
+     * @param templateId 模板ID
+     * @param agentType Agent类型
+     * @param context 上下文信息
+     * @return 提示词文本
+     */
+    public String buildServicePrompt(String templateId, String agentType, Map<String, Object> context) {
+        Map<String, String> variables = new HashMap<>();
+        variables.put("serviceName", (String) context.getOrDefault("serviceName", ""));
+        variables.put("serviceId", (String) context.getOrDefault("serviceId", ""));
+        variables.put("docType", (String) context.getOrDefault("docType", ""));
+        variables.put("filePath", (String) context.getOrDefault("filePath", ""));
+        variables.put("code", (String) context.getOrDefault("code", ""));
+        variables.put("className", (String) context.getOrDefault("className", ""));
+        variables.put("packageName", (String) context.getOrDefault("packageName", ""));
+        variables.put("summary", (String) context.getOrDefault("summary", ""));
+        variables.put("dependencies", (String) context.getOrDefault("dependencies", ""));
+
+        return promptTemplateLoader.loadAndRender(templateId, agentType, variables);
+    }
+
 
     /**
      * 获取简单类名

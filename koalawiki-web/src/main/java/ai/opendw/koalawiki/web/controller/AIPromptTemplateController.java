@@ -32,10 +32,20 @@ public class AIPromptTemplateController {
     private final AIPromptTemplateRepository templateRepository;
 
     @GetMapping("/list")
-    public ResponseEntity<Result<List<TemplateResponse>>> list() {
+    public ResponseEntity<Result<List<TemplateResponse>>> list(
+            @RequestParam(required = false) String docType,
+            @RequestParam(required = false) String agentType) {
         List<AIPromptTemplateEntity> templates = templateRepository.findAll();
         List<TemplateResponse> responses = new java.util.ArrayList<>();
         for (AIPromptTemplateEntity entity : templates) {
+            if (docType != null && !docType.isEmpty() && entity.getPromptType() != null
+                    && !entity.getPromptType().equals(docType)) {
+                continue;
+            }
+            if (agentType != null && !agentType.isEmpty() && entity.getAgentType() != null
+                    && !entity.getAgentType().equals("all") && !entity.getAgentType().equals(agentType)) {
+                continue;
+            }
             responses.add(toResponse(entity));
         }
         return ResponseEntity.ok(Result.success(responses));

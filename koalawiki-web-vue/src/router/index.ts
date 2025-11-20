@@ -36,6 +36,11 @@ const routes = [
         component: () => import('@/views/AIDocuments.vue')
       },
       {
+        path: 'repository/:id/services',
+        name: 'ServiceDocuments',
+        component: () => import('@/views/ServiceDocuments.vue')
+      },
+      {
         path: 'ai-documents/:id',
         name: 'AIDocumentDetail',
         component: () => import('@/views/AIDocumentDetail.vue')
