@@ -207,7 +207,7 @@ public class WarehouseController {
      * 获取仓库列表（分页）
      */
     @GetMapping("/list")
-    public ResponseEntity<Result<Page<WarehouseResponse>>> getWarehouseList(
+    public ResponseEntity<Result<ai.opendw.koalawiki.web.dto.warehouse.WarehouseListResponse>> getWarehouseList(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "12") @Min(1) int pageSize,
             @RequestParam(required = false) String keyword) {
@@ -224,7 +224,18 @@ public class WarehouseController {
                 warehouses = warehouseRepository.findAll(pageable);
             }
 
-            Page<WarehouseResponse> response = warehouses.map(this::convertToResponse);
+            List<WarehouseResponse> items = warehouses.getContent().stream()
+                    .map(this::convertToResponse)
+                    .collect(java.util.stream.Collectors.toList());
+
+            ai.opendw.koalawiki.web.dto.warehouse.WarehouseListResponse response =
+                    ai.opendw.koalawiki.web.dto.warehouse.WarehouseListResponse.builder()
+                            .items(items)
+                            .total((int) warehouses.getTotalElements())
+                            .page(page)
+                            .pageSize(pageSize)
+                            .totalPages(warehouses.getTotalPages())
+                            .build();
 
             return ResponseEntity.ok(Result.success(response));
 
