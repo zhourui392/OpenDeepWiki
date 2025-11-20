@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class DocumentPromptBuilder {
 
-    private final AIPromptTemplateService promptTemplateService;
+    private final ResourceBasedAIPromptTemplateLoader promptTemplateLoader;
 
     /**
      * 构建项目级架构分析提示词
@@ -190,9 +190,9 @@ public class DocumentPromptBuilder {
             prompt.append("\n");
         }
 
-        // 7. 从数据库加载输出要求模板
+        // 7. 从资源文件加载输出要求模板
         prompt.append("---\n\n");
-        String outputTemplate = promptTemplateService.loadTemplate("project_analysis", "claude");
+        String outputTemplate = promptTemplateLoader.loadTemplate("project_analysis", "claude");
         prompt.append(outputTemplate);
 
         return prompt.toString();
@@ -212,25 +212,9 @@ public class DocumentPromptBuilder {
         variables.put("language", (String) context.getOrDefault("language", "java"));
         variables.put("code", code != null ? code : "");
 
-        return promptTemplateService.loadAndRender("class_chinese", "claude", variables);
+        return promptTemplateLoader.loadAndRender("class_chinese", "claude", variables);
     }
 
-    /**
-     * 为Codex构建英文提示词
-     *
-     * @param code    源代码
-     * @param context 上下文信息
-     * @return 提示词文本
-     */
-    public String buildEnglishPrompt(String code, Map<String, Object> context) {
-        Map<String, String> variables = new HashMap<>();
-        variables.put("className", (String) context.getOrDefault("className", "Unknown"));
-        variables.put("packageName", (String) context.getOrDefault("packageName", ""));
-        variables.put("language", (String) context.getOrDefault("language", "java"));
-        variables.put("code", code != null ? code : "");
-
-        return promptTemplateService.loadAndRender("class_english", "codex", variables);
-    }
 
     /**
      * 获取简单类名

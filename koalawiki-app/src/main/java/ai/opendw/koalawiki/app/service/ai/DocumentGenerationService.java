@@ -72,10 +72,8 @@ public class DocumentGenerationService {
             AIAgent agent = agentFactory.getAgent(agentType);
             log.info("使用Agent: {}", agent.getName());
 
-            // 5. 构建提示词（根据Agent类型选择中文或英文）
-            String prompt = agent.getName().equals("claude")
-                ? promptBuilder.buildChinesePrompt(code, context)
-                : promptBuilder.buildEnglishPrompt(code, context);
+            // 5. 构建提示词
+            String prompt = promptBuilder.buildChinesePrompt(code, context);
 
             // 6. 执行生成
             String content = agent.execute(prompt);
