@@ -18,7 +18,6 @@
         <p class="text-sm text-gray-600 mb-3">{{ agent.description }}</p>
         <div class="flex justify-end gap-2">
           <button @click.stop="editAgent(agent)" class="text-blue-600 hover:underline text-sm">编辑</button>
-          <button @click.stop="deleteAgent(agent.id!)" class="text-red-600 hover:underline text-sm">删除</button>
         </div>
       </div>
     </div>
@@ -90,12 +89,6 @@ const saveAgent = async () => {
   loadAgents()
 }
 
-const deleteAgent = async (id: string) => {
-  if (confirm('确认删除该 Agent？')) {
-    await agentApi.deleteAgent(id)
-    loadAgents()
-  }
-}
 
 onMounted(loadAgents)
 </script>
