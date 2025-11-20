@@ -11,6 +11,7 @@ import ai.opendw.koalawiki.web.dto.warehouse.BranchListResponse;
 import ai.opendw.koalawiki.web.dto.warehouse.CustomSubmitWarehouseRequest;
 import ai.opendw.koalawiki.web.dto.warehouse.FileContentResponse;
 import ai.opendw.koalawiki.web.dto.warehouse.SubmitWarehouseRequest;
+import ai.opendw.koalawiki.web.dto.warehouse.WarehouseListResponse;
 import ai.opendw.koalawiki.web.dto.warehouse.WarehouseResponse;
 import ai.opendw.koalawiki.web.dto.warehouse.WarehouseStatsResponse;
 import lombok.RequiredArgsConstructor;
@@ -207,7 +208,7 @@ public class WarehouseController {
      * 获取仓库列表（分页）
      */
     @GetMapping("/list")
-    public ResponseEntity<Result<ai.opendw.koalawiki.web.dto.warehouse.WarehouseListResponse>> getWarehouseList(
+    public ResponseEntity<Result<WarehouseListResponse>> getWarehouseList(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "12") @Min(1) int pageSize,
             @RequestParam(required = false) String keyword) {
@@ -228,8 +229,7 @@ public class WarehouseController {
                     .map(this::convertToResponse)
                     .collect(java.util.stream.Collectors.toList());
 
-            ai.opendw.koalawiki.web.dto.warehouse.WarehouseListResponse response =
-                    ai.opendw.koalawiki.web.dto.warehouse.WarehouseListResponse.builder()
+            WarehouseListResponse response = WarehouseListResponse.builder()
                             .items(items)
                             .total((int) warehouses.getTotalElements())
                             .page(page)
