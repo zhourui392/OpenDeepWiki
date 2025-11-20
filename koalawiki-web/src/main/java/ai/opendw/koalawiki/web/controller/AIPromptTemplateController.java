@@ -32,15 +32,19 @@ public class AIPromptTemplateController {
     private final AIPromptTemplateRepository templateRepository;
 
     @GetMapping("/list")
-    public ResponseEntity<Result<List<AIPromptTemplateEntity>>> list() {
+    public ResponseEntity<Result<List<TemplateResponse>>> list() {
         List<AIPromptTemplateEntity> templates = templateRepository.findAll();
-        return ResponseEntity.ok(Result.success(templates));
+        List<TemplateResponse> responses = new java.util.ArrayList<>();
+        for (AIPromptTemplateEntity entity : templates) {
+            responses.add(toResponse(entity));
+        }
+        return ResponseEntity.ok(Result.success(responses));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Result<AIPromptTemplateEntity>> get(@PathVariable String id) {
+    public ResponseEntity<Result<TemplateResponse>> get(@PathVariable String id) {
         Optional<AIPromptTemplateEntity> template = templateRepository.findById(id);
-        return template.map(t -> ResponseEntity.ok(Result.success(t)))
+        return template.map(t -> ResponseEntity.ok(Result.success(toResponse(t))))
                 .orElse(ResponseEntity.ok(Result.error("模板不存在")));
     }
 
@@ -86,10 +90,31 @@ public class AIPromptTemplateController {
         return ResponseEntity.ok(Result.success(null, "删除成功"));
     }
 
+    private TemplateResponse toResponse(AIPromptTemplateEntity entity) {
+        TemplateResponse response = new TemplateResponse();
+        response.setId(entity.getId());
+        response.setName(entity.getTemplateName());
+        response.setDescription(entity.getDescription());
+        response.setTemplate(entity.getTemplateContent());
+        response.setCreatedAt(entity.getCreatedAt());
+        response.setUpdatedAt(entity.getUpdatedAt());
+        return response;
+    }
+
     @Data
     public static class TemplateRequest {
         private String name;
         private String description;
         private String template;
+    }
+
+    @Data
+    public static class TemplateResponse {
+        private String id;
+        private String name;
+        private String description;
+        private String template;
+        private java.util.Date createdAt;
+        private java.util.Date updatedAt;
     }
 }
