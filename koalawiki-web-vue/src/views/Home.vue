@@ -125,8 +125,7 @@ const loadWarehouses = async () => {
   loading.value = true
   try {
     const response = await warehouseApi.getWarehouseList(1, 20, keyword.value) as any
-    // API interceptor 已经提取了 data,所以 response 就是 data 内容
-    warehouses.value = response?.content || []
+    warehouses.value = response?.items || []
     console.log('Loaded warehouses:', warehouses.value)
   } catch (error) {
     console.error('Failed to load warehouses:', error)

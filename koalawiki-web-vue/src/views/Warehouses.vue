@@ -68,7 +68,8 @@ const showAddDialog = ref(false)
 const newWarehouse = ref({ address: '', branch: 'main' })
 
 const loadWarehouses = async () => {
-  warehouses.value = await warehouseApi.getWarehouseList(1, 100) as any
+  const response = await warehouseApi.getWarehouseList(1, 100) as any
+  warehouses.value = response.items || []
 }
 
 const addWarehouse = async () => {

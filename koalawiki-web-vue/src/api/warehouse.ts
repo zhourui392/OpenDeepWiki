@@ -26,9 +26,17 @@ export interface SubmitWarehouseRequest {
   gitPassword?: string
 }
 
+export interface WarehouseListResponse {
+  items: WarehouseResponse[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
+
 export const warehouseApi = {
   getWarehouseList(page: number, pageSize: number, keyword?: string) {
-    return apiClient.get<WarehouseResponse[]>('/warehouse/list', {
+    return apiClient.get<WarehouseListResponse>('/warehouse/list', {
       params: { page, pageSize, keyword }
     })
   },
