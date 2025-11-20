@@ -133,19 +133,56 @@ public class AIDocumentController {
     }
 
     /**
+     * 按服务生成文档
+     */
+    @PostMapping("/warehouses/{warehouseId}/services/{serviceId}/generate-docs")
+    public ApiResponse<Map<String, Object>> generateDocsByService(
+            @PathVariable String warehouseId,
+            @PathVariable String serviceId,
+            @RequestBody(required = false) GenerateRequest request) {
+
+        log.info("按服务生成文档: warehouseId={}, serviceId={}", warehouseId, serviceId);
+
+        try {
+            List<File> javaFiles = scanJavaFiles(warehouseId);
+            if (javaFiles.isEmpty()) {
+                return ApiResponse.error(400, "未找到Java文件");
+            }
+
+            String agentType = request != null ? request.getAgentType() : null;
+            generationService.generateByService(warehouseId, serviceId, javaFiles, agentType);
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("message", "服务文档生成任务已启动");
+            result.put("serviceId", serviceId);
+
+            return ApiResponse.success(result);
+
+        } catch (Exception e) {
+            log.error("按服务生成文档失败", e);
+            return ApiResponse.error(500, "文档生成失败: " + e.getMessage());
+        }
+    }
+
+    /**
      * 获取文档列表
      */
     @GetMapping("/warehouses/{warehouseId}/ai-documents")
     public ApiResponse<PageData<AIDocument>> listDocuments(
             @PathVariable String warehouseId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String serviceId) {
 
         Pageable pageable = PageRequest.of(page, size,
                 Sort.by(Sort.Direction.DESC, "createdAt"));
 
-        Page<AIDocumentEntity> entities = documentRepository
-                .findByWarehouseId(warehouseId, pageable);
+        Page<AIDocumentEntity> entities;
+        if (serviceId != null && !serviceId.trim().isEmpty()) {
+            entities = documentRepository.findByWarehouseIdAndServiceId(warehouseId, serviceId, pageable);
+        } else {
+            entities = documentRepository.findByWarehouseId(warehouseId, pageable);
+        }
 
         List<AIDocument> documents = entities.getContent().stream()
                 .map(this::toDocument)
@@ -290,12 +327,17 @@ public class AIDocumentController {
         AIDocument doc = new AIDocument();
         doc.setId(entity.getId());
         doc.setWarehouseId(entity.getWarehouseId());
+        doc.setServiceId(entity.getServiceId());
+        doc.setServiceName(entity.getServiceName());
+        doc.setDocType(entity.getDocType());
+        doc.setPromptTemplateId(entity.getPromptTemplateId());
         doc.setSourceFile(entity.getSourceFile());
         doc.setTitle(entity.getTitle());
         doc.setContent(entity.getContent());
         doc.setStatus(entity.getStatus());
         doc.setAgentType(entity.getAgentType());
         doc.setErrorMessage(entity.getErrorMessage());
+        doc.setMetadata(entity.getMetadata());
         doc.setCreatedAt(entity.getCreatedAt());
         doc.setUpdatedAt(entity.getUpdatedAt());
         return doc;

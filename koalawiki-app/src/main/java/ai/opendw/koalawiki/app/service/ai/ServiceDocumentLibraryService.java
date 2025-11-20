@@ -110,6 +110,40 @@ public class ServiceDocumentLibraryService {
     }
 
     /**
+     * 根据服务配置解析匹配的源文件
+     *
+     * @param warehouseId 仓库ID
+     * @param serviceId 服务ID
+     * @param allFiles 所有文件列表
+     * @return 匹配的文件列表
+     */
+    public List<String> resolveSources(String warehouseId, String serviceId, List<String> allFiles) {
+        ServiceDocumentLibrary config = getByServiceId(warehouseId, serviceId);
+        if (config == null || config.getSourceGlobs() == null || config.getSourceGlobs().isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<String> matched = new ArrayList<>();
+        for (String file : allFiles) {
+            for (String glob : config.getSourceGlobs()) {
+                if (matchGlob(file, glob)) {
+                    matched.add(file);
+                    break;
+                }
+            }
+        }
+        return matched;
+    }
+
+    /**
+     * 简单的glob匹配
+     */
+    private boolean matchGlob(String path, String glob) {
+        String regex = glob.replace("**", ".*").replace("*", "[^/]*").replace("?", ".");
+        return path.matches(regex);
+    }
+
+    /**
      * 校验服务ID是否已存在
      */
     private void validateServiceId(String warehouseId, String serviceId) {
