@@ -64,11 +64,22 @@ check_environment() {
     check_command npm "sudo apt install npm"
 
     # 检查版本
-    JAVA_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}' | awk -F '.' '{print $1}')
+    # Java 版本提取：支持 1.8.x 和 11+ 两种格式
+    JAVA_VERSION_STRING=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')
+
+    # 判断是 1.x 还是新版本号格式
+    if [[ $JAVA_VERSION_STRING =~ ^1\. ]]; then
+        # 1.8.x 格式，提取 1.8 中的 8
+        JAVA_VERSION=$(echo $JAVA_VERSION_STRING | awk -F '.' '{print $2}')
+    else
+        # 11+ 格式，提取主版本号
+        JAVA_VERSION=$(echo $JAVA_VERSION_STRING | awk -F '.' '{print $1}')
+    fi
+
     NODE_VERSION=$(node -v | sed 's/v//' | awk -F '.' '{print $1}')
 
     if [ "$JAVA_VERSION" -lt 8 ]; then
-        error "Java 版本过低，需要 JDK 1.8+，当前: $JAVA_VERSION"
+        error "Java 版本过低，需要 JDK 1.8+，当前: $JAVA_VERSION_STRING"
         exit 1
     fi
 
