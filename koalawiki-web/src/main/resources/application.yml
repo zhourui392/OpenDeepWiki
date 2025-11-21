@@ -70,7 +70,7 @@ management:
 # Git配置
 koalawiki:
   git:
-    storage-path: ${GIT_STORAGE_PATH:D:/data/koalawiki/git}
+    storage-path: ${GIT_STORAGE_PATH:/var/lib/koalawiki/git}
     max-depth: 0
     timeout: 300000
     cache-cleanup-days: 30
@@ -94,9 +94,9 @@ koalawiki:
 
 # AI Agent配置
 ai:
-  # CLI命令路径 (Windows环境需要使用.cmd后缀)
+  # CLI命令路径
   cli:
-    claude: claude.cmd
+    claude: claude
 
   # 超时时间(毫秒)
   timeout: 600000
