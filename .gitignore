@@ -147,6 +147,8 @@ config/production.yml
 # Git storage path
 /repositories/
 repositories/
+/data/git/
+data/git/
 
 # Data directories
 /neo4j_data/

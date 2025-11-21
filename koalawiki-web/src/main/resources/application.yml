@@ -70,7 +70,7 @@ management:
 # Git配置
 koalawiki:
   git:
-    storage-path: ${GIT_STORAGE_PATH:/var/lib/koalawiki/git}
+    storage-path: ${GIT_STORAGE_PATH:./data/git}
     max-depth: 0
     timeout: 300000
     cache-cleanup-days: 30

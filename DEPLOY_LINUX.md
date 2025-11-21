@@ -264,7 +264,7 @@ curl http://localhost:18081/actuator/health
 | JAR 文件 | `koalawiki-web/target/koalawiki-web-0.1.0-SNAPSHOT.jar` | 应用程序包 |
 | PID 文件 | `/var/run/koalawiki.pid` | 进程 ID 文件 |
 | 日志文件 | `logs/koalawiki.log` | 应用日志 |
-| Git 存储 | `/var/lib/koalawiki/git` | Git 仓库存储 |
+| Git 存储 | `./data/git` | Git 仓库存储（可通过 GIT_STORAGE_PATH 环境变量自定义） |
 | 配置文件 | `koalawiki-web/src/main/resources/application.yml` | 应用配置 |
 
 ## 常见问题
@@ -425,7 +425,7 @@ journalctl -u koalawiki -n 100
 ### 4. 检查磁盘空间
 ```bash
 df -h
-du -sh /var/lib/koalawiki/*
+du -sh ./data/*
 ```
 
 ### 5. 检查数据库连接

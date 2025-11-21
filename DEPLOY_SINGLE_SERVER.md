@@ -365,7 +365,8 @@ OpenDeepWiki/
 │   ├── .env.production.local          # 前端生产配置（不提交）
 │   ├── src/
 │   └── dist/                          # 前端构建产物（临时）
-└── /var/lib/koalawiki/git/            # Git 仓库存储目录
+└── data/
+    └── git/                           # Git 仓库存储目录
 ```
 
 ---

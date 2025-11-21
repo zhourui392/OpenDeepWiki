@@ -79,7 +79,7 @@ check_environment() {
 create_directories() {
     info "创建必要的目录..."
     mkdir -p ${LOG_DIR}
-    mkdir -p /var/lib/koalawiki/git
+    mkdir -p ./data/git
     info "目录创建完成"
 }
 
