@@ -95,6 +95,18 @@ koalawiki:
       max-size: 1000
     test-on-startup: ${AI_TEST_ON_STARTUP:false}
 
+  # 仓库同步配置
+  sync:
+    enabled: true               # 是否启用自动同步
+    cron: "0 0 */6 * * ?"      # 同步任务执行时间(默认每6小时)
+    batch-size: 10             # 每批处理的仓库数量
+    max-concurrent: 3          # 最大并发同步数
+
+  # 文档自动生成配置
+  doc:
+    auto-generate: true        # 是否在仓库同步完成后自动生成文档
+    agent-type: claude         # 默认使用的AI代理类型
+
 # AI Agent配置
 ai:
   # CLI命令路径
