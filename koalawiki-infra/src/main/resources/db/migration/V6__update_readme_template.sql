@@ -63,7 +63,7 @@ SET
     `version` = '2.0.0',
     `updated_at` = NOW()
 WHERE `prompt_type` = 'README'
-  AND `agent_type` = 'all';
+  AND `agent_type` = 'claude';
 
 -- =============================================
 -- 迁移完成
