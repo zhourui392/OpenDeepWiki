@@ -117,7 +117,7 @@
           <p class="text-sm mt-1">点击"生成文档"按钮开始</p>
         </div>
 
-        <div v-else class="overflow-hidden rounded-lg">
+        <div v-else class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
