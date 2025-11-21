@@ -170,7 +170,7 @@ const submitWarehouse = async () => {
       closeDialog()
       // 跳转到仓库详情页
       if (response.data?.id) {
-        router.push(`/repository/${response.data.id}`)
+        router.push(`/repository/${response.data.id}/ai-documents`)
       } else {
         loadWarehouses()
       }
@@ -185,7 +185,7 @@ const submitWarehouse = async () => {
 }
 
 const goToRepository = (id: string) => {
-  router.push(`/repository/${id}`)
+  router.push(`/repository/${id}/ai-documents`)
 }
 
 const statusClass = (status: string) => {
