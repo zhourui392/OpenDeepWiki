@@ -185,6 +185,8 @@ FLUSH PRIVILEGES;
 ```
 
 ### 3. 配置应用
+
+#### 后端配置
 编辑 `koalawiki-web/src/main/resources/application.yml`：
 
 ```yaml
@@ -194,6 +196,41 @@ spring:
     username: koalawiki
     password: your_password
 ```
+
+#### 前端配置（重要！）
+编辑前端 API 地址配置：
+
+```bash
+cd koalawiki-web-vue
+
+# 创建生产环境配置
+cat > .env.production.local << EOF
+# 后端 API 地址
+# 场景1: 前后端同机部署（推荐）- 使用相对路径
+VITE_API_BASE_URL=/api
+
+# 场景2: 前后端分离部署 - 使用完整地址
+# VITE_API_BASE_URL=http://localhost:18081/api
+
+# 场景3: 远程部署 - 使用服务器 IP
+# VITE_API_BASE_URL=http://192.168.1.100:18081/api
+
+# 场景4: 域名部署 - 使用域名
+# VITE_API_BASE_URL=https://api.yourdomain.com/api
+EOF
+
+# 安装依赖并构建前端
+npm install
+npm run build
+
+# 构建后的文件会自动复制到 koalawiki-web/src/main/resources/static
+cd ..
+```
+
+**配置说明**：
+- 前后端同机部署（推荐）：使用 `/api`，无需配置 CORS
+- 前后端分离部署：使用完整的后端 URL，需配置 CORS
+- 详细配置说明：参见 `koalawiki-web-vue/API_CONFIG.md`
 
 ### 4. 首次部署
 ```bash

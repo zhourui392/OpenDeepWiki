@@ -1,7 +1,12 @@
 import axios from 'axios'
 
+// 获取 API 基础 URL
+// 开发环境：使用相对路径 /api（通过 Vite proxy 代理到后端）
+// 生产环境：使用环境变量配置的完整 URL
+const baseURL = import.meta.env.VITE_API_BASE_URL || '/api'
+
 const apiClient = axios.create({
-  baseURL: '/api',
+  baseURL,
   timeout: 600000,
   headers: {
     'Content-Type': 'application/json'
