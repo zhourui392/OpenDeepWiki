@@ -93,7 +93,7 @@
       </div>
 
       <!-- Documents Table -->
-      <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+      <div class="bg-white rounded-lg shadow-sm">
         <div v-if="loading" class="flex items-center justify-center h-64">
           <div class="text-gray-500">加载中...</div>
         </div>
@@ -106,7 +106,8 @@
           <p class="text-sm mt-1">点击"生成文档"按钮开始</p>
         </div>
 
-        <table v-else class="min-w-full divide-y divide-gray-200">
+        <div v-else class="overflow-hidden rounded-lg">
+          <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -166,6 +167,7 @@
             </tr>
           </tbody>
         </table>
+        </div>
 
         <!-- Pagination -->
         <div v-if="totalPages > 1" class="bg-gray-50 px-6 py-4 flex items-center justify-between border-t border-gray-200">

@@ -729,6 +729,36 @@ public class WarehouseController {
     }
 
     /**
+     * 删除单个仓库
+     *
+     * @param warehouseId 仓库ID
+     * @return 删除结果
+     * @author zhourui(V33215020)
+     * @since 2025/11/21
+     */
+    @PostMapping("/delete")
+    public ResponseEntity<Result<Void>> deleteWarehouse(@RequestParam @NotBlank String warehouseId) {
+        log.info("删除仓库: {}", warehouseId);
+
+        try {
+            Optional<WarehouseEntity> warehouseOpt = warehouseRepository.findById(warehouseId);
+            if (!warehouseOpt.isPresent()) {
+                return ResponseEntity.ok(Result.error("仓库不存在"));
+            }
+
+            WarehouseEntity warehouse = warehouseOpt.get();
+            warehouseRepository.delete(warehouse);
+
+            log.info("仓库删除成功: {}", warehouseId);
+            return ResponseEntity.ok(Result.success(null, "仓库删除成功"));
+
+        } catch (Exception e) {
+            log.error("删除仓库失败: warehouseId={}", warehouseId, e);
+            return ResponseEntity.ok(Result.error("删除失败: " + e.getMessage()));
+        }
+    }
+
+    /**
      * 批量操作仓库
      * 支持批量删除、启用、禁用等操作
      *

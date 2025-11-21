@@ -318,16 +318,33 @@ public class WarehouseSyncServiceImpl implements IWarehouseSyncService {
 
     /**
      * 构建Git认证信息
+     *
+     * <p>如果仓库没有配置用户名密码，则使用默认值</p>
+     *
+     * @param warehouse 仓库实体
+     * @return Git认证信息
+     * @author zhourui(V33215020)
+     * @since 2025/11/21
      */
     private GitCredentials buildGitCredentials(WarehouseEntity warehouse) {
-        if (warehouse.getGitUserName() != null && warehouse.getGitPassword() != null) {
-            GitCredentials credentials = new GitCredentials();
-            credentials.setType(GitCredentials.CredentialType.HTTP_BASIC);
-            credentials.setUsername(warehouse.getGitUserName());
-            credentials.setPassword(warehouse.getGitPassword());
-            return credentials;
+        String username = warehouse.getGitUserName();
+        String password = warehouse.getGitPassword();
+
+        if (username == null || username.trim().isEmpty()) {
+            username = "V33215020";
+            log.debug("使用默认Git用户名: {}", username);
         }
-        return null;
+
+        if (password == null || password.trim().isEmpty()) {
+            password = "Zz135246";
+            log.debug("使用默认Git密码");
+        }
+
+        GitCredentials credentials = new GitCredentials();
+        credentials.setType(GitCredentials.CredentialType.HTTP_BASIC);
+        credentials.setUsername(username);
+        credentials.setPassword(password);
+        return credentials;
     }
 
     /**

@@ -205,15 +205,29 @@ public class WarehouseSyncExecutorImpl implements IWarehouseSyncExecutor {
 
     /**
      * 构建Git凭证
+     *
+     * <p>如果仓库没有配置用户名密码，则使用默认值</p>
+     *
+     * @param warehouse 仓库实体
+     * @return Git认证信息
+     * @author zhourui(V33215020)
+     * @since 2025/11/21
      */
     private GitCredentials buildCredentials(WarehouseEntity warehouse) {
-        // 从仓库配置中获取认证信息
-        if (warehouse.getGitUserName() != null && warehouse.getGitPassword() != null) {
-            return GitCredentials.httpBasic(warehouse.getGitUserName(), warehouse.getGitPassword());
+        String username = warehouse.getGitUserName();
+        String password = warehouse.getGitPassword();
+
+        if (username == null || username.trim().isEmpty()) {
+            username = "V33215020";
+            log.debug("使用默认Git用户名: {}", username);
         }
 
-        // 无需认证
-        return GitCredentials.none();
+        if (password == null || password.trim().isEmpty()) {
+            password = "Zz135246";
+            log.debug("使用默认Git密码");
+        }
+
+        return GitCredentials.httpBasic(username, password);
     }
 
     /**
