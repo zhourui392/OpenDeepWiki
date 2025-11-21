@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -34,11 +35,32 @@ public class CLIExecutor {
      * @throws CLIExecutionException CLI执行异常
      */
     public String execute(String[] command) throws CLIExecutionException {
-        log.debug("执行CLI命令: {}", String.join(" ", command));
+        return execute(command, null);
+    }
+
+    /**
+     * 在指定工作目录下执行CLI命令
+     *
+     * @param command 命令数组
+     * @param workingDirectory 工作目录，null表示使用默认目录
+     * @return CLI输出结果
+     * @throws CLIExecutionException CLI执行异常
+     */
+    public String execute(String[] command, String workingDirectory) throws CLIExecutionException {
+        log.debug("执行CLI命令: {}, 工作目录: {}", String.join(" ", command), workingDirectory);
 
         try {
             ProcessBuilder pb = new ProcessBuilder(command);
             pb.redirectErrorStream(true);
+
+            if (workingDirectory != null) {
+                File workDir = new File(workingDirectory);
+                if (!workDir.exists() || !workDir.isDirectory()) {
+                    throw new CLIExecutionException("工作目录不存在或不是目录: " + workingDirectory);
+                }
+                pb.directory(workDir);
+                log.debug("设置CLI工作目录: {}", workingDirectory);
+            }
 
             Process process = pb.start();
 
@@ -98,11 +120,33 @@ public class CLIExecutor {
      * @throws CLIExecutionException CLI执行异常
      */
     public String executeWithInput(String[] command, String input) throws CLIExecutionException {
-        log.debug("执行CLI命令(带输入): {}", String.join(" ", command));
+        return executeWithInput(command, input, null);
+    }
+
+    /**
+     * 在指定工作目录下执行CLI命令并通过标准输入传递数据
+     *
+     * @param command 命令数组
+     * @param input 标准输入内容
+     * @param workingDirectory 工作目录，null表示使用默认目录
+     * @return CLI输出结果
+     * @throws CLIExecutionException CLI执行异常
+     */
+    public String executeWithInput(String[] command, String input, String workingDirectory) throws CLIExecutionException {
+        log.debug("执行CLI命令(带输入): {}, 工作目录: {}", String.join(" ", command), workingDirectory);
 
         try {
             ProcessBuilder pb = new ProcessBuilder(command);
             pb.redirectErrorStream(true);
+
+            if (workingDirectory != null) {
+                File workDir = new File(workingDirectory);
+                if (!workDir.exists() || !workDir.isDirectory()) {
+                    throw new CLIExecutionException("工作目录不存在或不是目录: " + workingDirectory);
+                }
+                pb.directory(workDir);
+                log.debug("设置CLI工作目录: {}", workingDirectory);
+            }
 
             Process process = pb.start();
 

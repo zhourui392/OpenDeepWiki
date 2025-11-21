@@ -26,19 +26,22 @@ public class CodexAgent implements AIAgent {
 
     @Override
     public String execute(String prompt) {
-        log.info("CodexAgent开始执行，提示词长度: {}", prompt.length());
+        return execute(prompt, null);
+    }
+
+    @Override
+    public String execute(String prompt, String workingDirectory) {
+        log.info("CodexAgent开始执行，提示词长度: {}, 工作目录: {}",
+            prompt.length(), workingDirectory);
 
         try {
-            // 构建Codex CLI命令
             String[] command = {
                 codexCommand,
-                "-p",  // print模式
+                "-p",
                 prompt
             };
 
-            // 执行CLI
-            String result = cliExecutor.execute(command);
-
+            String result = cliExecutor.execute(command, workingDirectory);
             log.info("CodexAgent执行完成，输出长度: {}", result.length());
             return result;
 

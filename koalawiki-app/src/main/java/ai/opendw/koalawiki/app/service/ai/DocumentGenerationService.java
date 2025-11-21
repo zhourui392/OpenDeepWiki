@@ -258,7 +258,9 @@ public class DocumentGenerationService {
 
             AIAgent agent = agentFactory.getAgent(agentType);
             String prompt = promptBuilder.buildReadmePrompt(context, DEFAULT_SERVICE_NAME);
-            String content = agent.execute(prompt);
+
+            // 在项目目录下执行CLI
+            String content = agent.execute(prompt, projectPath);
 
             AIDocumentEntity entity = documentRepository.findByWarehouseIdAndSourceFile(warehouseId, "/")
                     .orElse(new AIDocumentEntity());

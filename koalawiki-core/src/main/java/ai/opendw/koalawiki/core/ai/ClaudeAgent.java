@@ -32,7 +32,13 @@ public class ClaudeAgent implements AIAgent {
 
     @Override
     public String execute(String prompt) {
-        log.info("ClaudeAgent开始执行，提示词长度: {}", prompt.length());
+        return execute(prompt, null);
+    }
+
+    @Override
+    public String execute(String prompt, String workingDirectory) {
+        log.info("ClaudeAgent开始执行，提示词长度: {}, 工作目录: {}",
+            prompt.length(), workingDirectory);
 
         try {
             String[] command = {
@@ -41,7 +47,7 @@ public class ClaudeAgent implements AIAgent {
                 "--output-format", "text"
             };
 
-            String result = cliExecutor.executeWithInput(command, prompt);
+            String result = cliExecutor.executeWithInput(command, prompt, workingDirectory);
             log.info("ClaudeAgent执行完成，输出长度: {}", result.length());
             return result;
 

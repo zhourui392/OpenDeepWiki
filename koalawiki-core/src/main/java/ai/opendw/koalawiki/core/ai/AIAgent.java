@@ -20,6 +20,15 @@ public interface AIAgent {
     String execute(String prompt);
 
     /**
+     * 在指定工作目录下执行AI生成
+     *
+     * @param prompt 提示词文本
+     * @param workingDirectory 工作目录（CLI执行的上下文目录）
+     * @return AI生成的结果
+     */
+    String execute(String prompt, String workingDirectory);
+
+    /**
      * 获取Agent名称
      *
      * @return Agent名称（如: claude, codex）
