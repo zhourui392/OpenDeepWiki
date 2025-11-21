@@ -33,17 +33,6 @@
               </svg>
               {{ generating ? '生成中...' : '生成架构文档' }}
             </button>
-            <button
-              @click="handleGenerate"
-              :disabled="generating"
-              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              <svg v-if="generating" class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              {{ generating ? '生成中...' : '批量生成文档' }}
-            </button>
           </div>
         </div>
 
@@ -303,30 +292,6 @@ const handleGenerateProject = async () => {
 
     // 自动打开文档
     router.push(`/ai-documents/${response.documentId}`);
-  } catch (error: any) {
-    console.error('生成失败:', error);
-    alert('生成失败: ' + (error.response?.data?.message || error.message));
-  } finally {
-    generating.value = false;
-  }
-};
-
-// 批量生成文档
-const handleGenerate = async () => {
-  if (!confirm('确定要批量生成文档吗？这可能需要一些时间...')) {
-    return;
-  }
-
-  generating.value = true;
-  try {
-    await aiDocumentApi.generateDocs(warehouseId.value, { agentType: 'claude' });
-    alert('文档生成任务已启动，请稍候刷新查看');
-
-    // 5秒后自动刷新
-    setTimeout(() => {
-      loadDocuments();
-      loadStats();
-    }, 5000);
   } catch (error: any) {
     console.error('生成失败:', error);
     alert('生成失败: ' + (error.response?.data?.message || error.message));
