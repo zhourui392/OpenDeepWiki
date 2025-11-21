@@ -60,5 +60,12 @@ export const warehouseApi = {
   // 手动触发同步
   triggerSync(warehouseId: string, forceSync: boolean = false) {
     return apiClient.post('/warehouse/sync/trigger', { warehouseId, forceSync })
+  },
+
+  // 删除仓库
+  deleteWarehouse(warehouseId: string) {
+    return apiClient.post('/warehouse/delete', null, {
+      params: { warehouseId }
+    })
   }
 }

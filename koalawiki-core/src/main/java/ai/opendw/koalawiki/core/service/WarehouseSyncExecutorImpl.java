@@ -8,6 +8,7 @@ import ai.opendw.koalawiki.infra.repository.WarehouseRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -31,6 +32,12 @@ public class WarehouseSyncExecutorImpl implements IWarehouseSyncExecutor {
     private final GitPathResolver pathResolver;
     private final WarehouseRepository warehouseRepository;
     private final ObjectMapper objectMapper;
+
+    @Value("${koalawiki.git.default-username:}")
+    private String defaultGitUsername;
+
+    @Value("${koalawiki.git.default-password:}")
+    private String defaultGitPassword;
 
     /**
      * 同步进度缓存
@@ -206,10 +213,10 @@ public class WarehouseSyncExecutorImpl implements IWarehouseSyncExecutor {
     /**
      * 构建Git凭证
      *
-     * <p>如果仓库没有配置用户名密码，则使用默认值</p>
+     * <p>优先使用仓库配置的用户名密码，如果未配置则使用系统默认凭据</p>
      *
      * @param warehouse 仓库实体
-     * @return Git认证信息
+     * @return Git认证信息，如果都未配置则返回null
      * @author zhourui(V33215020)
      * @since 2025/11/21
      */
@@ -218,13 +225,24 @@ public class WarehouseSyncExecutorImpl implements IWarehouseSyncExecutor {
         String password = warehouse.getGitPassword();
 
         if (username == null || username.trim().isEmpty()) {
-            username = "V33215020";
-            log.debug("使用默认Git用户名: {}", username);
+            username = defaultGitUsername;
+            if (username != null && !username.trim().isEmpty()) {
+                log.debug("使用系统默认Git用户名");
+            }
         }
 
         if (password == null || password.trim().isEmpty()) {
-            password = "Zz135246";
-            log.debug("使用默认Git密码");
+            password = defaultGitPassword;
+            if (password != null && !password.trim().isEmpty()) {
+                log.debug("使用系统默认Git密码");
+            }
+        }
+
+        // 如果用户名或密码为空，返回null（用于公开仓库）
+        if (username == null || username.trim().isEmpty() ||
+            password == null || password.trim().isEmpty()) {
+            log.debug("未配置Git凭据，将尝试访问公开仓库");
+            return null;
         }
 
         return GitCredentials.httpBasic(username, password);

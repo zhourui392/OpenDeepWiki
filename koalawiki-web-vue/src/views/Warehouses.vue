@@ -84,10 +84,15 @@ const syncWarehouse = async (id: string) => {
   loadWarehouses()
 }
 
-const deleteWarehouse = async (_id: string) => {
+const deleteWarehouse = async (id: string) => {
   if (confirm('确认删除该仓库？')) {
-    // TODO: 添加删除 API
-    loadWarehouses()
+    try {
+      await warehouseApi.deleteWarehouse(id)
+      loadWarehouses()
+    } catch (error) {
+      console.error('删除仓库失败:', error)
+      alert('删除仓库失败')
+    }
   }
 }
 

@@ -74,6 +74,9 @@ koalawiki:
     max-depth: 0
     timeout: 300000
     cache-cleanup-days: 30
+    # Git默认凭据配置（用于未配置用户名密码的仓库）
+    default-username: ${GIT_DEFAULT_USERNAME:}
+    default-password: ${GIT_DEFAULT_PASSWORD:}
 
   # AI配置
   ai:
