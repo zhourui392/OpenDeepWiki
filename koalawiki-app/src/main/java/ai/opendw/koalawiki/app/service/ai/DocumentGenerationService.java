@@ -180,35 +180,53 @@ public class DocumentGenerationService {
     /**
      * 为整个项目生成架构文档和README
      *
+     * <p>并行生成架构文档和 README,互不影响</p>
+     *
      * @param warehouseId 仓库ID
      * @param projectPath 项目路径
      * @param agentType Agent类型 (可选)
-     * @return 生成的架构文档
+     * @return 生成的架构文档(如果成功)
+     * @author zhourui(V33215020)
+     * @since 2025/11/21
      */
     @Transactional
     public AIDocument generateForProject(String warehouseId, String projectPath, String agentType) {
         log.info("开始生成项目文档: warehouse={}, path={}", warehouseId, projectPath);
 
         AIDocument archDoc = null;
+        AIDocument readmeDoc = null;
+        Exception archException = null;
+        Exception readmeException = null;
+
+        // 并行生成架构文档和 README
+        try {
+            archDoc = generateArchitectureDoc(warehouseId, projectPath, agentType);
+            log.info("架构文档生成成功: documentId={}", archDoc.getId());
+        } catch (Exception e) {
+            archException = e;
+            log.error("架构文档生成失败", e);
+        }
 
         try {
-            // 1. 生成架构文档
-            archDoc = generateArchitectureDoc(warehouseId, projectPath, agentType);
-
-            // 2. 生成README文档
-            try {
-                generateReadmeDoc(warehouseId, projectPath, agentType);
-                log.info("README文档生成成功");
-            } catch (Exception e) {
-                log.error("README文档生成失败，但架构文档已生成", e);
-            }
-
-            return archDoc;
-
+            readmeDoc = generateReadmeDoc(warehouseId, projectPath, agentType);
+            log.info("README文档生成成功: documentId={}", readmeDoc.getId());
         } catch (Exception e) {
-            log.error("项目文档生成失败: {}", projectPath, e);
-            throw new RuntimeException("项目文档生成失败: " + e.getMessage(), e);
+            readmeException = e;
+            log.error("README文档生成失败", e);
         }
+
+        // 如果都失败了，抛出异常
+        if (archDoc == null && readmeDoc == null) {
+            String errorMsg = String.format(
+                "项目文档全部生成失败 - 架构文档: %s, README: %s",
+                archException != null ? archException.getMessage() : "未知错误",
+                readmeException != null ? readmeException.getMessage() : "未知错误"
+            );
+            throw new RuntimeException(errorMsg);
+        }
+
+        // 返回架构文档（优先），如果架构文档失败则返回 README
+        return archDoc != null ? archDoc : readmeDoc;
     }
 
     /**
