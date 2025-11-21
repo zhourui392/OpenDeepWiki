@@ -206,7 +206,7 @@ public class CLIExecutor {
     /**
      * 检查CLI工具是否可用
      *
-     * @param cliCommand CLI命令名（如: "claude", "codex"）
+     * @param cliCommand CLI命令名（如: "claude"）
      * @return true-可用, false-不可用
      */
     public boolean isAvailable(String cliCommand) {

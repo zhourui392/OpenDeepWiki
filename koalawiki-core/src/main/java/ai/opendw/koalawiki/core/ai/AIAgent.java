@@ -31,7 +31,7 @@ public interface AIAgent {
     /**
      * 获取Agent名称
      *
-     * @return Agent名称（如: claude, codex）
+     * @return Agent名称（如: claude）
      */
     String getName();
 

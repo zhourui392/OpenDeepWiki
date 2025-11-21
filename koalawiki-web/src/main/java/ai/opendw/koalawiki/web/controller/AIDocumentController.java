@@ -388,6 +388,6 @@ public class AIDocumentController {
      */
     @Data
     public static class GenerateRequest {
-        private String agentType;  // claude 或 codex
+        private String agentType;  // claude
     }
 }

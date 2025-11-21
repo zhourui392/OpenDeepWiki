@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS `ai_prompt_template` (
 
     -- 模板标识
     `prompt_type` VARCHAR(50) NOT NULL COMMENT '提示词类型: project_analysis, class_chinese, class_english',
-    `agent_type` VARCHAR(20) NOT NULL COMMENT '适用的Agent类型: claude, codex, all',
+    `agent_type` VARCHAR(20) NOT NULL COMMENT '适用的Agent类型: claude, all',
     `template_name` VARCHAR(100) NOT NULL COMMENT '模板名称',
 
     -- 模板内容
@@ -135,56 +135,6 @@ INSERT INTO `ai_prompt_template` (`id`, `prompt_type`, `agent_type`, `template_n
 3. 重点突出类的设计意图和使用场景
 4. 避免过度技术化的术语',
     '用于生成中文类文档的Claude提示词模板',
-    1,
-    '1.0.0',
-    1,
-    NOW()
-),
-(
-    'class-english-codex-v1',
-    'class_english',
-    'codex',
-    '类文档生成提示词(Codex-英文)',
-    'Generate detailed technical documentation for the following {language} class.
-
-Class Name: {className}
-Package: {packageName}
-
-Source Code:
-```{language}
-{code}
-```
-
-Please generate Markdown documentation with:
-
-# {className}
-
-## Overview
-(2-3 sentences describing the purpose and responsibility)
-
-## Core Features
-(List main features with brief descriptions)
-
-## Main Methods
-(Document each public method with:
-- Method signature
-- Description
-- Parameters
-- Return value
-- Usage example)
-
-## Usage Examples
-(Provide 1-2 practical code examples)
-
-## Notes
-(Any special considerations)
-
-Requirements:
-1. Use clear and concise language
-2. Use {language} syntax highlighting for code examples
-3. Focus on design intent and usage scenarios
-4. Avoid overly technical jargon',
-    '用于生成英文类文档的Codex提示词模板',
     1,
     '1.0.0',
     1,

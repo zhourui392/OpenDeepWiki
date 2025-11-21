@@ -1,7 +1,6 @@
 package ai.opendw.koalawiki.core.ai;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
@@ -16,76 +15,29 @@ import org.springframework.stereotype.Component;
 public class AIAgentFactory {
 
     private final ClaudeAgent claudeAgent;
-    private final CodexAgent codexAgent;
 
-    @Value("${ai.default-agent:claude}")
-    private String defaultAgentName;
-
-    public AIAgentFactory(ClaudeAgent claudeAgent, CodexAgent codexAgent) {
+    public AIAgentFactory(ClaudeAgent claudeAgent) {
         this.claudeAgent = claudeAgent;
-        this.codexAgent = codexAgent;
     }
 
     /**
      * 获取指定的Agent
      *
-     * @param agentName agent名称: claude, codex, null(使用默认)
+     * @param agentName agent名称: claude, null(使用默认)
      * @return AI Agent实例
      */
     public AIAgent getAgent(String agentName) {
-        String name = agentName != null ? agentName.toLowerCase() : defaultAgentName;
-
-        AIAgent agent;
-        switch (name) {
-            case "claude":
-                agent = claudeAgent;
-                break;
-            case "codex":
-                agent = codexAgent;
-                break;
-            default:
-                log.warn("未知的Agent: {}, 使用默认Agent: {}", name, defaultAgentName);
-                agent = getDefaultAgent();
-                break;
-        }
-
-        // 检查可用性
-        if (!agent.isAvailable()) {
-            log.warn("Agent {} 不可用,尝试使用备用Agent", agent.getName());
-            return getFallbackAgent(agent);
-        }
-
-        return agent;
+        return getDefaultAgent();
     }
 
     /**
      * 获取默认Agent
      */
     private AIAgent getDefaultAgent() {
-        if ("codex".equals(defaultAgentName)) {
-            return codexAgent;
+        if (!claudeAgent.isAvailable()) {
+            throw new RuntimeException("Claude Agent不可用,请检查CLI安装");
         }
         return claudeAgent;
-    }
-
-    /**
-     * 获取备用Agent
-     */
-    private AIAgent getFallbackAgent(AIAgent failedAgent) {
-        // 如果Claude失败,尝试Codex
-        if (failedAgent == claudeAgent && codexAgent.isAvailable()) {
-            log.info("使用Codex作为备用Agent");
-            return codexAgent;
-        }
-
-        // 如果Codex失败,尝试Claude
-        if (failedAgent == codexAgent && claudeAgent.isAvailable()) {
-            log.info("使用Claude作为备用Agent");
-            return claudeAgent;
-        }
-
-        // 都不可用,抛出异常
-        throw new RuntimeException("所有Agent都不可用,请检查CLI安装");
     }
 
     /**

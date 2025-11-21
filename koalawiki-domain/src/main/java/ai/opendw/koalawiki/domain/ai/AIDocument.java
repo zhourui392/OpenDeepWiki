@@ -63,7 +63,7 @@ public class AIDocument {
     private String status;
 
     /**
-     * 使用的Agent类型: claude, codex
+     * 使用的Agent类型: claude
      */
     private String agentType;
 
@@ -100,7 +100,6 @@ public class AIDocument {
      * Agent类型枚举
      */
     public enum AgentType {
-        CLAUDE,
-        CODEX
+        CLAUDE
     }
 }

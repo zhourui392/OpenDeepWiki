@@ -94,13 +94,9 @@ koalawiki:
 
 # AI Agent配置
 ai:
-  # 默认Agent: claude 或 codex
-  default-agent: claude
-
   # CLI命令路径 (Windows环境需要使用.cmd后缀)
   cli:
     claude: claude.cmd
-    codex: codex
 
   # 超时时间(毫秒)
   timeout: 600000

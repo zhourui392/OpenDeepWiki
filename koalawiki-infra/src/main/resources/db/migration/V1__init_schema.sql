@@ -142,7 +142,7 @@ CREATE TABLE IF NOT EXISTS `ai_document` (
 
     -- 状态
     `status` VARCHAR(20) NOT NULL DEFAULT 'GENERATING' COMMENT '状态: GENERATING, COMPLETED, FAILED',
-    `agent_type` VARCHAR(20) COMMENT '使用的Agent: claude, codex',
+    `agent_type` VARCHAR(20) COMMENT '使用的Agent: claude',
     `error_message` TEXT COMMENT '错误信息',
 
     -- 审计字段
@@ -174,7 +174,7 @@ CREATE TABLE IF NOT EXISTS `generation_task` (
     `failed_files` INT DEFAULT 0 COMMENT '失败文件数',
 
     -- Agent配置
-    `agent_type` VARCHAR(20) COMMENT '使用的Agent: claude, codex',
+    `agent_type` VARCHAR(20) COMMENT '使用的Agent: claude',
 
     -- 时间
     `started_at` DATETIME NULL COMMENT '开始时间',
