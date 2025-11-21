@@ -269,6 +269,8 @@ public class DocumentGenerationService {
 
     /**
      * 生成README文档
+     *
+     * <p>使用特殊标识符 "__README__" 作为 sourceFile 以避免与项目根目录冲突</p>
      */
     private AIDocument generateReadmeDoc(String warehouseId, String projectPath, String agentType) {
         try {
@@ -280,13 +282,13 @@ public class DocumentGenerationService {
             // 在项目目录下执行CLI
             String content = agent.execute(prompt, projectPath);
 
-            AIDocumentEntity entity = documentRepository.findByWarehouseIdAndSourceFile(warehouseId, "/")
+            AIDocumentEntity entity = documentRepository.findByWarehouseIdAndSourceFile(warehouseId, "__README__")
                     .orElse(new AIDocumentEntity());
 
             if (entity.getId() == null) {
                 entity.setId(UUID.randomUUID().toString());
                 entity.setWarehouseId(warehouseId);
-                entity.setSourceFile("/");
+                entity.setSourceFile("__README__");
             }
 
             applyDefaultServiceContext(entity);
