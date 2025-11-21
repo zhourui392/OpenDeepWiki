@@ -240,9 +240,9 @@ public class DocumentPromptBuilder {
 
 
     /**
-     * 构建README提示词
+     * 构建系统说明文档提示词
      *
-     * @param context README上下文
+     * @param context ReadmeContext上下文
      * @param serviceName 服务名称
      * @return 提示词文本
      */
@@ -256,7 +256,7 @@ public class DocumentPromptBuilder {
         variables.put("testGuide", context.getTestGuide() != null ? context.getTestGuide() : "");
         variables.put("dataModels", formatDataModels(context.getDataModels()));
 
-        return promptTemplateLoader.loadAndRender("README", "claude", variables);
+        return promptTemplateLoader.loadAndRender("SYSTEM_DOC", "claude", variables);
     }
 
     private String formatProjectInfo(ai.opendw.koalawiki.core.analysis.model.ReadmeContext context, String serviceName) {

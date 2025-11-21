@@ -178,9 +178,9 @@ public class DocumentGenerationService {
     }
 
     /**
-     * 为整个项目生成架构文档和README
+     * 为整个项目生成架构文档和系统说明文档
      *
-     * <p>并行生成架构文档和 README,互不影响</p>
+     * <p>并行生成架构文档和系统说明文档,互不影响</p>
      *
      * @param warehouseId 仓库ID
      * @param projectPath 项目路径
@@ -198,7 +198,7 @@ public class DocumentGenerationService {
         Exception archException = null;
         Exception readmeException = null;
 
-        // 并行生成架构文档和 README
+        // 并行生成架构文档和系统说明文档
         try {
             archDoc = generateArchitectureDoc(warehouseId, projectPath, agentType);
             log.info("架构文档生成成功: documentId={}", archDoc.getId());
@@ -209,23 +209,23 @@ public class DocumentGenerationService {
 
         try {
             readmeDoc = generateReadmeDoc(warehouseId, projectPath, agentType);
-            log.info("README文档生成成功: documentId={}", readmeDoc.getId());
+            log.info("系统说明文档生成成功: documentId={}", readmeDoc.getId());
         } catch (Exception e) {
             readmeException = e;
-            log.error("README文档生成失败", e);
+            log.error("系统说明文档生成失败", e);
         }
 
         // 如果都失败了，抛出异常
         if (archDoc == null && readmeDoc == null) {
             String errorMsg = String.format(
-                "项目文档全部生成失败 - 架构文档: %s, README: %s",
+                "项目文档全部生成失败 - 架构文档: %s, 系统说明文档: %s",
                 archException != null ? archException.getMessage() : "未知错误",
                 readmeException != null ? readmeException.getMessage() : "未知错误"
             );
             throw new RuntimeException(errorMsg);
         }
 
-        // 返回架构文档（优先），如果架构文档失败则返回 README
+        // 返回架构文档（优先），如果架构文档失败则返回系统说明文档
         return archDoc != null ? archDoc : readmeDoc;
     }
 
@@ -268,9 +268,9 @@ public class DocumentGenerationService {
     }
 
     /**
-     * 生成README文档
+     * 生成系统说明文档
      *
-     * <p>使用特殊标识符 "__README__" 作为 sourceFile 以避免与项目根目录冲突</p>
+     * <p>使用 projectPath + "/SYSTEM_DOC" 作为 sourceFile 以避免与架构文档冲突</p>
      */
     private AIDocument generateReadmeDoc(String warehouseId, String projectPath, String agentType) {
         try {
@@ -282,30 +282,32 @@ public class DocumentGenerationService {
             // 在项目目录下执行CLI
             String content = agent.execute(prompt, projectPath);
 
-            AIDocumentEntity entity = documentRepository.findByWarehouseIdAndSourceFile(warehouseId, "__README__")
+            // 使用特殊路径标识系统说明文档
+            String sourceFile = projectPath + "/SYSTEM_DOC";
+            AIDocumentEntity entity = documentRepository.findByWarehouseIdAndSourceFile(warehouseId, sourceFile)
                     .orElse(new AIDocumentEntity());
 
             if (entity.getId() == null) {
                 entity.setId(UUID.randomUUID().toString());
                 entity.setWarehouseId(warehouseId);
-                entity.setSourceFile("__README__");
+                entity.setSourceFile(sourceFile);
             }
 
             applyDefaultServiceContext(entity);
-            entity.setDocType("README");
-            entity.setTitle("README.md");
+            entity.setDocType("SYSTEM_DOC");
+            entity.setTitle("系统说明文档");
             entity.setContent(content);
             entity.setStatus("COMPLETED");
             entity.setAgentType(agent.getName());
             entity.setUpdatedAt(new Date());
 
             documentRepository.save(entity);
-            log.info("README文档生成成功: documentId={}", entity.getId());
+            log.info("系统说明文档生成成功: documentId={}", entity.getId());
             return toDocument(entity);
 
         } catch (Exception e) {
-            log.error("README文档生成失败", e);
-            throw new RuntimeException("README文档生成失败: " + e.getMessage(), e);
+            log.error("系统说明文档生成失败", e);
+            throw new RuntimeException("系统说明文档生成失败: " + e.getMessage(), e);
         }
     }
 
