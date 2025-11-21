@@ -11,6 +11,7 @@ import ai.opendw.koalawiki.infra.repository.WarehouseRepository;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -46,6 +47,12 @@ public class AIDocumentController {
     private final GitRepositoryManager gitRepositoryManager;
     private final GitService gitService;
 
+    @Value("${koalawiki.git.default-username:}")
+    private String defaultGitUsername;
+
+    @Value("${koalawiki.git.default-password:}")
+    private String defaultGitPassword;
+
     /**
      * 触发项目架构文档生成(新)
      */
@@ -67,15 +74,7 @@ public class AIDocumentController {
                 return ApiResponse.error(400, "仓库地址为空");
             }
 
-            GitCredentials credentials = null;
-            if (warehouse.getGitUserName() != null && warehouse.getGitPassword() != null) {
-                credentials = GitCredentials.builder()
-                        .type(GitCredentials.CredentialType.HTTP_BASIC)
-                        .username(warehouse.getGitUserName())
-                        .password(warehouse.getGitPassword())
-                        .build();
-            }
-
+            GitCredentials credentials = buildCredentials(warehouse);
             GitRepositoryInfo repoInfo = gitService.cloneRepository(gitAddress, credentials);
             String localPath = repoInfo.getLocalPath();
 
@@ -267,15 +266,8 @@ public class AIDocumentController {
             if (!Files.exists(repoPath)) {
                 log.warn("仓库路径不存在: {}, 开始自动克隆仓库", localPath);
 
-                // 4.1 构建Git凭证
-                GitCredentials credentials = null;
-                if (warehouse.getGitUserName() != null && warehouse.getGitPassword() != null) {
-                    credentials = GitCredentials.builder()
-                            .username(warehouse.getGitUserName())
-                            .password(warehouse.getGitPassword())
-                            .build();
-                    log.info("使用仓库配置的凭证进行克隆");
-                }
+                // 4.1 构建Git凭证（使用通用方法）
+                GitCredentials credentials = buildCredentials(warehouse);
 
                 // 4.2 自动克隆仓库
                 try {
@@ -318,6 +310,44 @@ public class AIDocumentController {
         }
 
         return javaFiles;
+    }
+
+    /**
+     * 构建Git凭证
+     *
+     * <p>优先使用仓库配置的用户名密码，如果未配置则使用系统默认凭据</p>
+     *
+     * @param warehouse 仓库实体
+     * @return Git认证信息，如果都未配置则返回null
+     * @author zhourui(V33215020)
+     * @since 2025/11/21
+     */
+    private GitCredentials buildCredentials(WarehouseEntity warehouse) {
+        String username = warehouse.getGitUserName();
+        String password = warehouse.getGitPassword();
+
+        if (username == null || username.trim().isEmpty()) {
+            username = defaultGitUsername;
+            if (username != null && !username.trim().isEmpty()) {
+                log.debug("使用系统默认Git用户名");
+            }
+        }
+
+        if (password == null || password.trim().isEmpty()) {
+            password = defaultGitPassword;
+            if (password != null && !password.trim().isEmpty()) {
+                log.debug("使用系统默认Git密码");
+            }
+        }
+
+        // 如果用户名或密码为空，返回null（用于公开仓库）
+        if (username == null || username.trim().isEmpty() ||
+            password == null || password.trim().isEmpty()) {
+            log.debug("未配置Git凭据，将尝试访问公开仓库");
+            return null;
+        }
+
+        return GitCredentials.httpBasic(username, password);
     }
 
     /**
