@@ -74,9 +74,10 @@ public class CLIExecutor {
                         output.append(line).append("\n");
                     }
                 } catch (IOException e) {
-                    log.warn("读取CLI输出异常: {}", e.getMessage());
+                    log.debug("读取CLI输出中断: {}", e.getMessage());
                 }
             });
+            readerThread.setDaemon(true);
             readerThread.start();
 
             // 等待进程完成
@@ -84,12 +85,23 @@ public class CLIExecutor {
 
             if (!finished) {
                 process.destroyForcibly();
+                closeProcessStreams(process);
                 readerThread.interrupt();
+
+                readerThread.join(2000);
+                if (readerThread.isAlive()) {
+                    log.warn("读取线程未能在2秒内结束，已设置为守护线程自动清理");
+                }
                 throw new CLIExecutionException("CLI执行超时（" + timeoutMs + "ms）");
             }
 
             // 等待输出读取完成
             readerThread.join(5000);
+            if (readerThread.isAlive()) {
+                log.warn("输出读取线程未在5秒内完成，强制中断");
+                closeProcessStreams(process);
+                readerThread.interrupt();
+            }
 
             int exitCode = process.exitValue();
             String result = output.toString().trim();
@@ -166,9 +178,10 @@ public class CLIExecutor {
                         output.append(line).append("\n");
                     }
                 } catch (IOException e) {
-                    log.warn("读取CLI输出异常: {}", e.getMessage());
+                    log.debug("读取CLI输出中断: {}", e.getMessage());
                 }
             });
+            readerThread.setDaemon(true);
             readerThread.start();
 
             // 等待进程完成
@@ -176,12 +189,23 @@ public class CLIExecutor {
 
             if (!finished) {
                 process.destroyForcibly();
+                closeProcessStreams(process);
                 readerThread.interrupt();
+
+                readerThread.join(2000);
+                if (readerThread.isAlive()) {
+                    log.warn("读取线程未能在2秒内结束，已设置为守护线程自动清理");
+                }
                 throw new CLIExecutionException("CLI执行超时（" + timeoutMs + "ms）");
             }
 
             // 等待输出读取完成
             readerThread.join(5000);
+            if (readerThread.isAlive()) {
+                log.warn("输出读取线程未在5秒内完成，强制中断");
+                closeProcessStreams(process);
+                readerThread.interrupt();
+            }
 
             int exitCode = process.exitValue();
             String result = output.toString().trim();
@@ -227,6 +251,27 @@ public class CLIExecutor {
         } catch (Exception e) {
             log.debug("检查CLI工具失败: {} - {}", cliCommand, e.getMessage());
             return false;
+        }
+    }
+
+    /**
+     * 关闭进程的所有流，确保读取线程能正常退出
+     */
+    private void closeProcessStreams(Process process) {
+        try {
+            process.getInputStream().close();
+        } catch (Exception e) {
+            log.debug("关闭进程输入流失败: {}", e.getMessage());
+        }
+        try {
+            process.getOutputStream().close();
+        } catch (Exception e) {
+            log.debug("关闭进程输出流失败: {}", e.getMessage());
+        }
+        try {
+            process.getErrorStream().close();
+        } catch (Exception e) {
+            log.debug("关闭进程错误流失败: {}", e.getMessage());
         }
     }
 
