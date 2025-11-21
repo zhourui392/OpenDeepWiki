@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class DocumentPromptBuilder {
 
-    private final ResourceBasedAIPromptTemplateLoader promptTemplateLoader;
+    private final AIPromptTemplateService promptTemplateLoader;
 
     /**
      * 构建项目级架构分析提示词
