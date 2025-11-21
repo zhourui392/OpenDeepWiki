@@ -83,8 +83,21 @@ check_environment() {
         exit 1
     fi
 
-    if [ "$NODE_VERSION" -lt 16 ]; then
-        warn "Node.js 版本建议 16+，当前: $NODE_VERSION"
+    # Vite 7.x 要求 Node.js 20.19+ 或 22.12+
+    if [ "$NODE_VERSION" -lt 20 ]; then
+        error "Node.js 版本过低，Vite 要求 Node.js 20.19+ 或 22.12+，当前: $(node -v)"
+        echo ""
+        echo "升级方法："
+        echo "  # 使用 nvm (推荐)"
+        echo "  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash"
+        echo "  source ~/.bashrc"
+        echo "  nvm install 20"
+        echo "  nvm use 20"
+        echo ""
+        echo "  # 或使用 NodeSource 仓库"
+        echo "  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -"
+        echo "  sudo apt-get install -y nodejs"
+        exit 1
     fi
 
     info "✓ Java 版本: $(java -version 2>&1 | head -n 1)"
