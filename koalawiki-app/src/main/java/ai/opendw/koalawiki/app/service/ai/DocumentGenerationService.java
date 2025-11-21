@@ -46,6 +46,7 @@ public class DocumentGenerationService {
     private final GenerationTaskRepository taskRepository;
     private final ProjectScanner projectScanner;
     private final ServiceDocumentLibraryService libraryService;
+    private final ai.opendw.koalawiki.core.analysis.ProjectReadmeScanner readmeScanner;
 
     /**
      * 为单个Java文件生成文档
@@ -177,34 +178,51 @@ public class DocumentGenerationService {
     }
 
     /**
-     * 为整个项目生成架构文档
+     * 为整个项目生成架构文档和README
      *
      * @param warehouseId 仓库ID
      * @param projectPath 项目路径
      * @param agentType Agent类型 (可选)
-     * @return 生成的文档
+     * @return 生成的架构文档
      */
     @Transactional
     public AIDocument generateForProject(String warehouseId, String projectPath, String agentType) {
-        log.info("开始生成项目架构文档: warehouse={}, path={}", warehouseId, projectPath);
+        log.info("开始生成项目文档: warehouse={}, path={}", warehouseId, projectPath);
+
+        AIDocument archDoc = null;
 
         try {
-            // 1. 扫描项目结构
+            // 1. 生成架构文档
+            archDoc = generateArchitectureDoc(warehouseId, projectPath, agentType);
+
+            // 2. 生成README文档
+            try {
+                generateReadmeDoc(warehouseId, projectPath, agentType);
+                log.info("README文档生成成功");
+            } catch (Exception e) {
+                log.error("README文档生成失败，但架构文档已生成", e);
+            }
+
+            return archDoc;
+
+        } catch (Exception e) {
+            log.error("项目文档生成失败: {}", projectPath, e);
+            throw new RuntimeException("项目文档生成失败: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 生成架构文档
+     */
+    private AIDocument generateArchitectureDoc(String warehouseId, String projectPath, String agentType) {
+        try {
             ProjectStructure structure = projectScanner.scanProject(projectPath);
             log.info("项目扫描完成: 入口点数={}", structure.getEntryPoints().size());
 
-            // 2. 获取Agent
             AIAgent agent = agentFactory.getAgent(agentType);
-            log.info("使用Agent: {}", agent.getName());
-
-            // 3. 构建提示词
             String prompt = promptBuilder.buildProjectAnalysisPrompt(structure);
-            log.info("提示词长度: {}", prompt.length());
-
-            // 4. 执行生成
             String content = agent.execute(prompt);
 
-            // 5. 保存到数据库（存在则更新）
             AIDocumentEntity entity = documentRepository.findByWarehouseIdAndSourceFile(warehouseId, projectPath)
                     .orElse(new AIDocumentEntity());
 
@@ -215,7 +233,6 @@ public class DocumentGenerationService {
             }
 
             applyDefaultServiceContext(entity);
-
             entity.setTitle(structure.getProjectName() + " - 架构文档");
             entity.setContent(content);
             entity.setStatus("COMPLETED");
@@ -223,28 +240,50 @@ public class DocumentGenerationService {
             entity.setUpdatedAt(new Date());
 
             documentRepository.save(entity);
-
-            log.info("项目架构文档生成成功: documentId={}", entity.getId());
+            log.info("架构文档生成成功: documentId={}", entity.getId());
             return toDocument(entity);
 
         } catch (Exception e) {
-            log.error("项目架构文档生成失败: {}", projectPath, e);
+            log.error("架构文档生成失败", e);
+            throw new RuntimeException("架构文档生成失败: " + e.getMessage(), e);
+        }
+    }
 
-            // 保存失败记录
-            AIDocumentEntity entity = new AIDocumentEntity();
-            entity.setId(UUID.randomUUID().toString());
-            entity.setWarehouseId(warehouseId);
+    /**
+     * 生成README文档
+     */
+    private AIDocument generateReadmeDoc(String warehouseId, String projectPath, String agentType) {
+        try {
+            ai.opendw.koalawiki.core.analysis.model.ReadmeContext context = readmeScanner.scan(projectPath);
+
+            AIAgent agent = agentFactory.getAgent(agentType);
+            String prompt = promptBuilder.buildReadmePrompt(context, DEFAULT_SERVICE_NAME);
+            String content = agent.execute(prompt);
+
+            AIDocumentEntity entity = documentRepository.findByWarehouseIdAndSourceFile(warehouseId, "/")
+                    .orElse(new AIDocumentEntity());
+
+            if (entity.getId() == null) {
+                entity.setId(UUID.randomUUID().toString());
+                entity.setWarehouseId(warehouseId);
+                entity.setSourceFile("/");
+            }
+
             applyDefaultServiceContext(entity);
-            entity.setSourceFile(projectPath);
-            entity.setTitle("架构文档(失败)");
-            entity.setContent("");
-            entity.setStatus("FAILED");
-            entity.setAgentType(agentType);
-            entity.setErrorMessage(e.getMessage());
+            entity.setDocType("README");
+            entity.setTitle("README.md");
+            entity.setContent(content);
+            entity.setStatus("COMPLETED");
+            entity.setAgentType(agent.getName());
+            entity.setUpdatedAt(new Date());
 
             documentRepository.save(entity);
+            log.info("README文档生成成功: documentId={}", entity.getId());
+            return toDocument(entity);
 
-            throw new RuntimeException("项目架构文档生成失败: " + e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("README文档生成失败", e);
+            throw new RuntimeException("README文档生成失败: " + e.getMessage(), e);
         }
     }
 

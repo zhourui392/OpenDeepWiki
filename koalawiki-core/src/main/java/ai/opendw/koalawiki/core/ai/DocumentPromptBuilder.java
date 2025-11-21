@@ -240,6 +240,93 @@ public class DocumentPromptBuilder {
 
 
     /**
+     * 构建README提示词
+     *
+     * @param context README上下文
+     * @param serviceName 服务名称
+     * @return 提示词文本
+     */
+    public String buildReadmePrompt(ai.opendw.koalawiki.core.analysis.model.ReadmeContext context, String serviceName) {
+        Map<String, String> variables = new HashMap<>();
+        variables.put("projectInfo", formatProjectInfo(context, serviceName));
+        variables.put("modules", formatModules(context.getModules()));
+        variables.put("packages", formatPackages(context.getPackages()));
+        variables.put("features", formatFeatures(context.getFeatures()));
+        variables.put("startupGuide", context.getStartupGuide() != null ? context.getStartupGuide() : "");
+        variables.put("testGuide", context.getTestGuide() != null ? context.getTestGuide() : "");
+        variables.put("dataModels", formatDataModels(context.getDataModels()));
+
+        return promptTemplateLoader.loadAndRender("README", "claude", variables);
+    }
+
+    private String formatProjectInfo(ai.opendw.koalawiki.core.analysis.model.ReadmeContext context, String serviceName) {
+        return "- 项目名称: " + (context.getProjectName() != null ? context.getProjectName() : serviceName) + "\n" +
+               "- 服务名称: " + serviceName;
+    }
+
+    private String formatModules(List<ai.opendw.koalawiki.core.analysis.model.ReadmeContext.MavenModule> modules) {
+        if (modules == null || modules.isEmpty()) {
+            return "无模块信息";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (ai.opendw.koalawiki.core.analysis.model.ReadmeContext.MavenModule module : modules) {
+            sb.append("- ").append(module.getName());
+            if (module.getDescription() != null) {
+                sb.append(": ").append(module.getDescription());
+            }
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+
+    private String formatPackages(List<ai.opendw.koalawiki.core.analysis.model.ReadmeContext.PackageInfo> packages) {
+        if (packages == null || packages.isEmpty()) {
+            return "无包信息";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (ai.opendw.koalawiki.core.analysis.model.ReadmeContext.PackageInfo pkg : packages) {
+            sb.append("- ").append(pkg.getPackageName())
+              .append(" (").append(pkg.getClassCount()).append("个类): ")
+              .append(pkg.getPurpose()).append("\n");
+        }
+        return sb.toString();
+    }
+
+    private String formatFeatures(List<ai.opendw.koalawiki.core.analysis.model.ReadmeContext.Feature> features) {
+        if (features == null || features.isEmpty()) {
+            return "无功能信息";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (ai.opendw.koalawiki.core.analysis.model.ReadmeContext.Feature feature : features) {
+            sb.append("- ").append(feature.getName());
+            if (feature.getDescription() != null) {
+                sb.append(": ").append(feature.getDescription());
+            }
+            if (feature.getEndpoint() != null) {
+                sb.append(" (").append(feature.getEndpoint()).append(")");
+            }
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+
+    private String formatDataModels(List<ai.opendw.koalawiki.core.analysis.model.ReadmeContext.DataModel> models) {
+        if (models == null || models.isEmpty()) {
+            return "无数据模型";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (ai.opendw.koalawiki.core.analysis.model.ReadmeContext.DataModel model : models) {
+            sb.append("- ").append(model.getEntityName())
+              .append(" → ").append(model.getTableName()).append("\n");
+        }
+        return sb.toString();
+    }
+
+    /**
      * 获取简单类名
      */
     private String getSimpleClassName(String fullClassName) {
