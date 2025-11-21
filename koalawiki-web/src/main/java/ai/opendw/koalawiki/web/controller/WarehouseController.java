@@ -96,7 +96,7 @@ public class WarehouseController {
             warehouse.setCreatedAt(new Date());
             warehouse.setName(repoInfo.getRepositoryName());
             warehouse.setAddress(request.getAddress());
-            warehouse.setBranch(request.getBranch() != null ? request.getBranch() : "main");
+            warehouse.setBranch(request.getBranch() != null ? request.getBranch() : "master");
             warehouse.setStatus(WarehouseStatus.PENDING);
             warehouse.setClassify(ClassifyType.DOCUMENTATION);
             warehouse.setUserId("default-admin-uuid-0001"); // TODO: 从认证信息获取
@@ -147,7 +147,7 @@ public class WarehouseController {
             warehouse.setCreatedAt(new Date());
             warehouse.setName(request.getRepositoryName());
             warehouse.setAddress(request.getAddress());
-            warehouse.setBranch(request.getBranch() != null ? request.getBranch() : "main");
+            warehouse.setBranch(request.getBranch() != null ? request.getBranch() : "master");
             warehouse.setStatus(WarehouseStatus.PENDING);
             warehouse.setClassify(ClassifyType.DOCUMENTATION);
             warehouse.setUserId("default-admin-uuid-0001"); // TODO: 从认证信息获取

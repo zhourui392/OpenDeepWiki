@@ -2,9 +2,6 @@
   <div class="container mx-auto p-6">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-bold">Agent 管理</h1>
-      <button @click="createNew" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-        新建 Agent
-      </button>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -69,11 +66,6 @@ const loadAgents = async () => {
   agents.value = await agentApi.getAgentList() as any
 }
 
-const createNew = () => {
-  editingAgent.value = { name: '', description: '', template: '' }
-  showEditor.value = true
-}
-
 const editAgent = (agent: AgentTemplate) => {
   editingAgent.value = { ...agent }
   showEditor.value = true
@@ -82,11 +74,9 @@ const editAgent = (agent: AgentTemplate) => {
 const saveAgent = async () => {
   if (editingAgent.value.id) {
     await agentApi.updateAgent(editingAgent.value.id, editingAgent.value)
-  } else {
-    await agentApi.createAgent(editingAgent.value)
+    showEditor.value = false
+    loadAgents()
   }
-  showEditor.value = false
-  loadAgents()
 }
 
 

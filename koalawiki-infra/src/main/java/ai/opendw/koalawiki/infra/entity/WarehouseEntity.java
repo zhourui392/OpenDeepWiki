@@ -77,7 +77,7 @@ public class WarehouseEntity extends BaseJpaEntity {
      * 仓库分支
      */
     @Column(name = "branch", length = 100)
-    private String branch = "main";
+    private String branch = "master";
 
     /**
      * 仓库状态

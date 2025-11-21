@@ -47,7 +47,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">分支</label>
-            <input v-model="newWarehouse.branch" class="w-full px-3 py-2 border rounded" placeholder="main" />
+            <input v-model="newWarehouse.branch" class="w-full px-3 py-2 border rounded" placeholder="master" />
           </div>
           <div class="flex justify-end gap-2">
             <button @click="showAddDialog = false" class="px-4 py-2 border rounded hover:bg-gray-50">取消</button>
@@ -65,7 +65,7 @@ import { warehouseApi, type WarehouseResponse } from '@/api/warehouse'
 
 const warehouses = ref<WarehouseResponse[]>([])
 const showAddDialog = ref(false)
-const newWarehouse = ref({ address: '', branch: 'main' })
+const newWarehouse = ref({ address: '', branch: 'master' })
 
 const loadWarehouses = async () => {
   const response = await warehouseApi.getWarehouseList(1, 100) as any
@@ -75,7 +75,7 @@ const loadWarehouses = async () => {
 const addWarehouse = async () => {
   await warehouseApi.submitWarehouse(newWarehouse.value)
   showAddDialog.value = false
-  newWarehouse.value = { address: '', branch: 'main' }
+  newWarehouse.value = { address: '', branch: 'master' }
   loadWarehouses()
 }
 

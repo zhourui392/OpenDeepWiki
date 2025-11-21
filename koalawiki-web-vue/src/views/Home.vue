@@ -59,7 +59,7 @@
           <input
             v-model="branch"
             type="text"
-            placeholder="main"
+            placeholder="master"
             class="w-full px-3 py-2 border rounded-lg"
           />
         </div>
@@ -116,7 +116,7 @@ const loading = ref(false)
 const keyword = ref('')
 const showDialog = ref(false)
 const repoUrl = ref('')
-const branch = ref('main')
+const branch = ref('master')
 const gitUserName = ref('')
 const gitPassword = ref('')
 const submitting = ref(false)
@@ -141,7 +141,7 @@ const handleSearch = () => {
 const addWarehouse = () => {
   showDialog.value = true
   repoUrl.value = ''
-  branch.value = 'main'
+  branch.value = 'master'
   gitUserName.value = ''
   gitPassword.value = ''
 }
