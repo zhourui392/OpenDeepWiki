@@ -256,7 +256,8 @@ public class DocumentPromptBuilder {
         variables.put("testGuide", context.getTestGuide() != null ? context.getTestGuide() : "");
         variables.put("dataModels", formatDataModels(context.getDataModels()));
 
-        return promptTemplateLoader.loadAndRender("README", "claude", variables);
+        // README模板使用通用agent类型"all"
+        return promptTemplateLoader.loadAndRender("README", "all", variables);
     }
 
     private String formatProjectInfo(ai.opendw.koalawiki.core.analysis.model.ReadmeContext context, String serviceName) {
