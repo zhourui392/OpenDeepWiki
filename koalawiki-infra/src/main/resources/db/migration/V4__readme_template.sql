@@ -11,6 +11,9 @@ INSERT INTO `ai_prompt_template` (
     `prompt_type`,
     `agent_type`,
     `template_content`,
+    `is_active`,
+    `is_default`,
+    `version`,
     `created_at`,
     `updated_at`
 ) VALUES (
@@ -62,6 +65,9 @@ INSERT INTO `ai_prompt_template` (
 - 使用表格展示结构化数据
 - 添加必要的emoji图标增强可读性
 - 保持专业和简洁',
+    1,
+    1,
+    '1.0.0',
     NOW(),
     NOW()
 );
