@@ -24,6 +24,11 @@ public interface AIDocumentRepository extends JpaRepository<AIDocumentEntity, St
     Page<AIDocumentEntity> findByWarehouseId(String warehouseId, Pageable pageable);
 
     /**
+     * 根据仓库与服务查询文档
+     */
+    Page<AIDocumentEntity> findByWarehouseIdAndServiceId(String warehouseId, String serviceId, Pageable pageable);
+
+    /**
      * 根据仓库ID和源文件查询
      */
     Optional<AIDocumentEntity> findByWarehouseIdAndSourceFile(String warehouseId, String sourceFile);
@@ -37,6 +42,11 @@ public interface AIDocumentRepository extends JpaRepository<AIDocumentEntity, St
      * 统计仓库文档数量
      */
     long countByWarehouseId(String warehouseId);
+
+    /**
+     * 统计服务下的文档数量
+     */
+    long countByWarehouseIdAndServiceId(String warehouseId, String serviceId);
 
     /**
      * 统计指定状态的文档数量

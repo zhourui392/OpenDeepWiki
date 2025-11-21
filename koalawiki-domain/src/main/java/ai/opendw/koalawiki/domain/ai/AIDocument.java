@@ -23,6 +23,26 @@ public class AIDocument {
     private String warehouseId;
 
     /**
+     * 服务ID
+     */
+    private String serviceId;
+
+    /**
+     * 服务名称
+     */
+    private String serviceName;
+
+    /**
+     * 文档类别
+     */
+    private String docType;
+
+    /**
+     * 关联的提示词模板ID
+     */
+    private String promptTemplateId;
+
+    /**
      * 源代码文件路径
      */
     private String sourceFile;
@@ -51,6 +71,11 @@ public class AIDocument {
      * 错误信息
      */
     private String errorMessage;
+
+    /**
+     * 扩展信息(JSON)
+     */
+    private String metadata;
 
     /**
      * 创建时间

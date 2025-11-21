@@ -24,6 +24,11 @@ public interface GenerationTaskRepository extends JpaRepository<GenerationTaskEn
     Page<GenerationTaskEntity> findByWarehouseId(String warehouseId, Pageable pageable);
 
     /**
+     * 根据仓库与服务查询任务
+     */
+    Page<GenerationTaskEntity> findByWarehouseIdAndServiceId(String warehouseId, String serviceId, Pageable pageable);
+
+    /**
      * 查询最新的任务
      */
     Optional<GenerationTaskEntity> findFirstByWarehouseIdOrderByCreatedAtDesc(String warehouseId);

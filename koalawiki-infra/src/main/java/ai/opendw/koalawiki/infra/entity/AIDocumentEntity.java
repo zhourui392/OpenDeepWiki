@@ -22,6 +22,18 @@ public class AIDocumentEntity {
     @Column(name = "warehouse_id", nullable = false, length = 36)
     private String warehouseId;
 
+    @Column(name = "service_id", nullable = false, length = 64)
+    private String serviceId;
+
+    @Column(name = "service_name", nullable = false, length = 128)
+    private String serviceName;
+
+    @Column(name = "doc_type", nullable = false, length = 32)
+    private String docType;
+
+    @Column(name = "prompt_template_id", length = 36)
+    private String promptTemplateId;
+
     @Column(name = "source_file", nullable = false, length = 500)
     private String sourceFile;
 
@@ -40,6 +52,10 @@ public class AIDocumentEntity {
 
     @Column(name = "error_message", columnDefinition = "TEXT")
     private String errorMessage;
+
+    @Lob
+    @Column(name = "metadata", columnDefinition = "LONGTEXT")
+    private String metadata;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created_at", nullable = false, updatable = false)

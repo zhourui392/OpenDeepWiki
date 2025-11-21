@@ -3,11 +3,16 @@ import apiClient from './client'
 export interface AIDocument {
   id: string
   warehouseId: string
+  serviceId: string
+  serviceName: string
   sourceFile: string
   title: string
   content: string
   status: 'DRAFT' | 'COMPLETED' | 'FAILED'
   agentType: string
+  docType: string
+  promptTemplateId?: string
+  metadata?: string
   errorMessage?: string
   createdAt: string
   updatedAt: string
@@ -16,6 +21,8 @@ export interface AIDocument {
 export interface GenerationTask {
   id: string
   warehouseId: string
+  serviceId: string
+  docType: string
   status: 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED'
   totalFiles: number
   completedFiles: number

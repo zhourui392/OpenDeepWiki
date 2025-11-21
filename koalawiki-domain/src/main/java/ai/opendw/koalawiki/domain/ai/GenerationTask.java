@@ -23,6 +23,16 @@ public class GenerationTask {
     private String warehouseId;
 
     /**
+     * 服务ID
+     */
+    private String serviceId;
+
+    /**
+     * 文档类型
+     */
+    private String docType;
+
+    /**
      * 状态: PENDING, RUNNING, COMPLETED, FAILED
      */
     private String status;

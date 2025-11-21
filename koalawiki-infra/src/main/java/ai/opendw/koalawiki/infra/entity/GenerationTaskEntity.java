@@ -22,6 +22,12 @@ public class GenerationTaskEntity {
     @Column(name = "warehouse_id", nullable = false, length = 36)
     private String warehouseId;
 
+    @Column(name = "service_id", nullable = false, length = 64)
+    private String serviceId;
+
+    @Column(name = "doc_type", nullable = false, length = 32)
+    private String docType;
+
     @Column(nullable = false, length = 20)
     private String status;
 
