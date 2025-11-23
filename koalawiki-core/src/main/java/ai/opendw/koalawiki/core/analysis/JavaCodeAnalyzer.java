@@ -6,7 +6,9 @@ import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.MemberValuePair;
 import com.github.javaparser.ast.expr.MethodCallExpr;
@@ -109,12 +111,18 @@ public class JavaCodeAnalyzer {
                 classInfo.addAnnotation(extractAnnotation(ann))
         );
 
+        // 字段
+        classDecl.getFields().forEach(field ->
+                classInfo.addField(extractFieldInfo(field))
+        );
+
         // 方法
         classDecl.getMethods().forEach(method ->
                 classInfo.addMethod(extractMethodInfo(method))
         );
 
-        log.debug("解析类: {} (方法数: {})", fullClassName, classInfo.getMethods().size());
+        log.debug("解析类: {} (字段数: {}, 方法数: {})",
+            fullClassName, classInfo.getFields().size(), classInfo.getMethods().size());
         return classInfo;
     }
 
@@ -158,6 +166,25 @@ public class JavaCodeAnalyzer {
         });
 
         return methodInfo;
+    }
+
+    /**
+     * 提取字段信息
+     */
+    private FieldInfo extractFieldInfo(FieldDeclaration field) {
+        FieldInfo fieldInfo = new FieldInfo();
+
+        // 字段可能声明多个变量，取第一个
+        VariableDeclarator variable = field.getVariable(0);
+        fieldInfo.setName(variable.getNameAsString());
+        fieldInfo.setType(variable.getTypeAsString());
+
+        // 字段注解
+        field.getAnnotations().forEach(ann ->
+                fieldInfo.addAnnotation(extractAnnotation(ann))
+        );
+
+        return fieldInfo;
     }
 
     /**

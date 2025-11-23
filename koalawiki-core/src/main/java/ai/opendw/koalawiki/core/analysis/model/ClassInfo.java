@@ -35,6 +35,11 @@ public class ClassInfo {
     private List<AnnotationInfo> annotations = new ArrayList<>();
 
     /**
+     * 字段列表
+     */
+    private List<FieldInfo> fields = new ArrayList<>();
+
+    /**
      * 方法列表
      */
     private List<MethodInfo> methods = new ArrayList<>();
@@ -69,6 +74,13 @@ public class ClassInfo {
      */
     public void addAnnotation(AnnotationInfo annotation) {
         this.annotations.add(annotation);
+    }
+
+    /**
+     * 添加字段
+     */
+    public void addField(FieldInfo field) {
+        this.fields.add(field);
     }
 
     /**

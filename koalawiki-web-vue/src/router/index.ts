@@ -44,6 +44,11 @@ const routes = [
         path: 'ai-documents/:id',
         name: 'AIDocumentDetail',
         component: () => import('@/views/AIDocumentDetail.vue')
+      },
+      {
+        path: 'business-flow',
+        name: 'BusinessFlow',
+        component: () => import('@/views/BusinessFlow.vue')
       }
     ]
   },
