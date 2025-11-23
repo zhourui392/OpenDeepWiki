@@ -28,6 +28,7 @@
 const menuItems = [
   { path: '/', label: '首页' },
   { path: '/warehouses', label: '仓库管理' },
-  { path: '/agents', label: 'Agent 管理' }
+  { path: '/agents', label: 'Agent 管理' },
+  { path: '/business-flow', label: '业务流程追踪' }
 ]
 </script>
