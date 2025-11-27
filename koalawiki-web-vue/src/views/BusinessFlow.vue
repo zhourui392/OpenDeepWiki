@@ -87,7 +87,7 @@
         <span>所有业务流程 ({{ allResults.length }})</span>
       </template>
 
-      <el-collapse v-model="activeFlows">
+      <el-collapse v-model="activeFlows" @change="handleCollapseChange">
         <el-collapse-item
           v-for="(flow, index) in allResults"
           :key="flow.flowId"
@@ -219,9 +219,13 @@ const renderFlowDiagram = async (index: number) => {
 }
 
 // 监听折叠面板展开事件
-const handleCollapseChange = (activeNames: number[]) => {
-  activeNames.forEach(index => {
-    renderFlowDiagram(index)
+const handleCollapseChange = (activeNames: number[] | string[] | unknown) => {
+  const names = Array.isArray(activeNames) ? activeNames : []
+  names.forEach((index: number | string) => {
+    const idx = typeof index === 'number' ? index : parseInt(String(index), 10)
+    if (!isNaN(idx)) {
+      renderFlowDiagram(idx)
+    }
   })
 }
 </script>

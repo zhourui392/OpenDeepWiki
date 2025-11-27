@@ -232,6 +232,7 @@ out/
 
 # Frontend build output
 seo-web/
+koalawiki-web/src/main/resources/static/
 
 ##################################################
 ## Version Control
