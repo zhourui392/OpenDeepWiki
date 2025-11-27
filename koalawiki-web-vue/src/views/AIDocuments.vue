@@ -12,26 +12,15 @@
           </div>
           <div class="flex items-center gap-2">
             <button
-              @click="handleSyncWarehouse"
-              :disabled="syncing"
-              class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              <svg v-if="syncing" class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              {{ syncing ? '同步中...' : '同步仓库' }}
-            </button>
-            <button
               @click="handleGenerateReadme"
               :disabled="generating"
-              class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+              class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
             >
               <svg v-if="generating" class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              {{ generating ? '生成中...' : '生成README文档' }}
+              {{ generating ? '生成中...' : '生成文档' }}
             </button>
           </div>
         </div>
@@ -201,7 +190,6 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { aiDocumentApi, type AIDocument, type DocStats } from '@/api/ai-document';
 import { serviceDocumentApi, type ServiceDocumentLibrary } from '@/api/service-document';
-import { warehouseApi } from '@/api/warehouse';
 
 const route = useRoute();
 const router = useRouter();
@@ -212,7 +200,6 @@ const services = ref<ServiceDocumentLibrary[]>([]);
 const stats = ref<DocStats | null>(null);
 const loading = ref(false);
 const generating = ref(false);
-const syncing = ref(false);
 const searchKeyword = ref('');
 const filterService = ref('');
 const filterStatus = ref('');
@@ -242,30 +229,6 @@ const loadDocuments = async () => {
   }
 };
 
-// 同步仓库
-const handleSyncWarehouse = async () => {
-  if (!confirm('确定要同步仓库吗？这将从远程拉取最新代码...')) {
-    return;
-  }
-
-  syncing.value = true;
-  try {
-    await warehouseApi.triggerSync(warehouseId.value, true);
-    alert('仓库同步任务已启动，请稍候...');
-
-    // 5秒后自动刷新文档列表
-    setTimeout(() => {
-      loadDocuments();
-      loadStats();
-    }, 5000);
-  } catch (error: any) {
-    console.error('同步失败:', error);
-    alert('同步失败: ' + (error.response?.data?.message || error.message));
-  } finally {
-    syncing.value = false;
-  }
-};
-
 // 加载统计信息
 const loadStats = async () => {
   try {
@@ -277,14 +240,14 @@ const loadStats = async () => {
 
 // 生成README文档
 const handleGenerateReadme = async () => {
-  if (!confirm('确定要生成README文档吗？这将扫描整个项目并生成系统说明文档...')) {
+  if (!confirm('确定要生成文档吗？这将从远程拉取最新代码并生成系统说明文档...')) {
     return;
   }
 
   generating.value = true;
   try {
     const response: any = await aiDocumentApi.generateProjectDoc(warehouseId.value, { agentType: 'claude' });
-    alert(`README文档生成成功！\n标题: ${response.title}`);
+    alert(`文档生成成功！\n标题: ${response.title}`);
 
     // 立即刷新文档列表
     await loadDocuments();
