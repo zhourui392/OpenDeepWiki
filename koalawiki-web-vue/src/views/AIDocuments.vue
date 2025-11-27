@@ -22,6 +22,17 @@
               </svg>
               {{ syncing ? '同步中...' : '同步仓库' }}
             </button>
+            <button
+              @click="handleGenerateReadme"
+              :disabled="generating"
+              class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <svg v-if="generating" class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {{ generating ? '生成中...' : '生成README文档' }}
+            </button>
           </div>
         </div>
 
@@ -200,6 +211,7 @@ const documents = ref<AIDocument[]>([]);
 const services = ref<ServiceDocumentLibrary[]>([]);
 const stats = ref<DocStats | null>(null);
 const loading = ref(false);
+const generating = ref(false);
 const syncing = ref(false);
 const searchKeyword = ref('');
 const filterService = ref('');
@@ -260,6 +272,31 @@ const loadStats = async () => {
     stats.value = await aiDocumentApi.getDocStats(warehouseId.value) as any;
   } catch (error: any) {
     console.error('加载统计失败:', error);
+  }
+};
+
+// 生成README文档
+const handleGenerateReadme = async () => {
+  if (!confirm('确定要生成README文档吗？这将扫描整个项目并生成系统说明文档...')) {
+    return;
+  }
+
+  generating.value = true;
+  try {
+    const response: any = await aiDocumentApi.generateProjectDoc(warehouseId.value, { agentType: 'claude' });
+    alert(`README文档生成成功！\n标题: ${response.title}`);
+
+    // 立即刷新文档列表
+    await loadDocuments();
+    await loadStats();
+
+    // 自动打开文档
+    router.push(`/ai-documents/${response.documentId}`);
+  } catch (error: any) {
+    console.error('生成失败:', error);
+    alert('生成失败: ' + (error.response?.data?.message || error.message));
+  } finally {
+    generating.value = false;
   }
 };
 
