@@ -1,3 +1,9 @@
+/**
+ * Vue Router 路由配置
+ *
+ * @author zhourui(V33215020)
+ * @since 2025/11/28
+ */
 import { createRouter, createWebHistory } from 'vue-router'
 
 const routes = [
@@ -49,6 +55,41 @@ const routes = [
         path: 'business-flow',
         name: 'BusinessFlow',
         component: () => import('@/views/BusinessFlow.vue')
+      },
+      {
+        path: 'search',
+        name: 'GlobalSearch',
+        component: () => import('@/views/GlobalSearch.vue')
+      },
+      {
+        path: 'clusters',
+        name: 'ClusterList',
+        redirect: '/clusters/default'
+      },
+      {
+        path: 'clusters/:clusterId',
+        name: 'ClusterOverview',
+        component: () => import('@/views/ClusterOverview.vue')
+      },
+      {
+        path: 'clusters/:clusterId/domains/:code',
+        name: 'DomainDetail',
+        component: () => import('@/views/DomainDetail.vue')
+      },
+      {
+        path: 'clusters/:clusterId/interfaces',
+        name: 'InterfaceList',
+        component: () => import('@/views/InterfaceList.vue')
+      },
+      {
+        path: 'clusters/:clusterId/interfaces/:interfaceId',
+        name: 'InterfaceDetail',
+        component: () => import('@/views/InterfaceDetail.vue')
+      },
+      {
+        path: 'admin/clusters',
+        name: 'ClusterAdmin',
+        component: () => import('@/views/ClusterAdmin.vue')
       }
     ]
   },
