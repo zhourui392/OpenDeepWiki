@@ -39,6 +39,17 @@ public class AnnotationInfo {
     }
 
     /**
+     * 获取属性值（字符串形式）
+     *
+     * @param key 属性名
+     * @return 属性值字符串，不存在返回null
+     */
+    public String getAttributeValue(String key) {
+        Object value = this.attributes.get(key);
+        return value != null ? value.toString() : null;
+    }
+
+    /**
      * 获取简单名称
      */
     public String getSimpleName() {
