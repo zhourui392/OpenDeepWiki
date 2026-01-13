@@ -639,3 +639,279 @@ const Agents = {
     return { loading, agents };
   }
 };
+
+// 全局领域管理页
+const GlobalDomains = {
+  template: `
+    <div class="global-domains-page">
+      <div class="page-header">
+        <h2>领域管理</h2>
+        <el-button type="primary" @click="showCreateDialog = true">新建领域</el-button>
+      </div>
+
+      <el-collapse v-model="activeDomains" v-loading="loading">
+        <el-collapse-item v-for="domain in domains" :key="domain.id" :name="domain.id">
+          <template #title>
+            <div class="domain-title">
+              <span class="domain-name">{{domain.name}}</span>
+              <el-tag v-if="domain.code" size="small" type="info">{{domain.code}}</el-tag>
+              <span class="domain-desc">{{domain.description}}</span>
+              <div class="domain-actions" @click.stop>
+                <el-button size="small" @click="handleEditDomain(domain)">编辑</el-button>
+                <el-button size="small" type="success" @click="handleGenerateDomainDoc(domain)" :loading="generatingDomainDoc === domain.id">生成文档</el-button>
+                <el-button size="small" type="danger" @click="handleDeleteDomain(domain)">删除</el-button>
+              </div>
+            </div>
+          </template>
+
+          <div v-if="domain.documentContent" class="domain-doc-preview">
+            <el-button size="small" @click="showDomainDoc(domain)">查看领域文档</el-button>
+          </div>
+
+          <div class="services-section">
+            <div class="services-header">
+              <span>服务列表</span>
+              <el-button size="small" type="primary" @click="handleAddService(domain)">添加服务</el-button>
+            </div>
+            <el-table :data="domain.services || []" size="small">
+              <el-table-column prop="serviceName" label="服务名称" />
+              <el-table-column prop="serviceId" label="服务ID" />
+              <el-table-column label="关联仓库">
+                <template #default="{row}">
+                  <span>{{getWarehouseName(row.warehouseId)}}</span>
+                </template>
+              </el-table-column>
+              <el-table-column prop="description" label="描述" />
+              <el-table-column label="操作" width="200">
+                <template #default="{row}">
+                  <el-button size="small" type="success" @click="handleGenerateServiceDoc(domain, row)" :loading="generatingServiceDoc === row.id">生成文档</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+        </el-collapse-item>
+      </el-collapse>
+
+      <el-empty v-if="!loading && domains.length === 0" description="暂无领域，请先创建领域" />
+
+      <!-- 创建领域对话框 -->
+      <el-dialog v-model="showCreateDialog" title="新建领域" width="500px">
+        <el-form :model="domainForm" label-width="80px">
+          <el-form-item label="名称" required><el-input v-model="domainForm.name" placeholder="领域名称" /></el-form-item>
+          <el-form-item label="代码" required><el-input v-model="domainForm.code" placeholder="领域代码，用于Git路径，如: domain-a" /></el-form-item>
+          <el-form-item label="描述"><el-input v-model="domainForm.description" type="textarea" placeholder="领域描述" /></el-form-item>
+        </el-form>
+        <template #footer>
+          <el-button @click="showCreateDialog = false">取消</el-button>
+          <el-button type="primary" @click="handleCreateDomain">确定</el-button>
+        </template>
+      </el-dialog>
+
+      <!-- 编辑领域对话框 -->
+      <el-dialog v-model="showEditDialog" title="编辑领域" width="500px">
+        <el-form :model="editForm" label-width="80px">
+          <el-form-item label="名称" required><el-input v-model="editForm.name" /></el-form-item>
+          <el-form-item label="代码" required><el-input v-model="editForm.code" placeholder="领域代码" /></el-form-item>
+          <el-form-item label="描述"><el-input v-model="editForm.description" type="textarea" /></el-form-item>
+        </el-form>
+        <template #footer>
+          <el-button @click="showEditDialog = false">取消</el-button>
+          <el-button type="primary" @click="handleUpdateDomain">确定</el-button>
+        </template>
+      </el-dialog>
+
+      <!-- 添加服务对话框 -->
+      <el-dialog v-model="showServiceDialog" title="添加服务" width="600px">
+        <el-form :model="serviceForm" label-width="100px">
+          <el-form-item label="关联仓库" required>
+            <el-select v-model="serviceForm.warehouseId" placeholder="选择仓库" style="width: 100%">
+              <el-option v-for="w in warehouses" :key="w.id" :label="w.name" :value="w.id">
+                <span>{{w.name}}</span>
+                <span style="color: #999; font-size: 12px; margin-left: 8px;">{{w.address}}</span>
+              </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="服务ID" required><el-input v-model="serviceForm.serviceId" placeholder="英文标识" /></el-form-item>
+          <el-form-item label="服务名称" required><el-input v-model="serviceForm.serviceName" /></el-form-item>
+          <el-form-item label="描述"><el-input v-model="serviceForm.description" type="textarea" /></el-form-item>
+          <el-form-item label="源码匹配"><el-input v-model="serviceGlobsInput" type="textarea" placeholder="每行一个规则，如: src/main/java/**/*.java" /></el-form-item>
+        </el-form>
+        <template #footer>
+          <el-button @click="showServiceDialog = false">取消</el-button>
+          <el-button type="primary" @click="handleCreateService">确定</el-button>
+        </template>
+      </el-dialog>
+
+      <!-- 文档预览对话框 -->
+      <el-dialog v-model="showDocDialog" :title="docDialogTitle" width="80%" top="5vh">
+        <div class="doc-content" v-html="renderedDoc"></div>
+      </el-dialog>
+    </div>
+  `,
+  setup() {
+    const loading = ref(false);
+    const domains = ref([]);
+    const activeDomains = ref([]);
+    const warehouses = ref([]);
+
+    const showCreateDialog = ref(false);
+    const showEditDialog = ref(false);
+    const showServiceDialog = ref(false);
+    const domainForm = ref({ name: '', description: '', code: '' });
+    const editForm = ref({ id: '', name: '', description: '', code: '' });
+    const currentDomainId = ref('');
+    const serviceForm = ref({ warehouseId: '', serviceId: '', serviceName: '', description: '' });
+    const serviceGlobsInput = ref('');
+
+    const generatingDomainDoc = ref('');
+    const generatingServiceDoc = ref('');
+
+    const showDocDialog = ref(false);
+    const docDialogTitle = ref('');
+    const docContent = ref('');
+    const renderedDoc = computed(() => marked.parse(docContent.value || ''));
+
+    const getWarehouseName = (warehouseId) => {
+      const w = warehouses.value.find(w => w.id === warehouseId);
+      return w ? w.name : warehouseId;
+    };
+
+    const loadData = async () => {
+      loading.value = true;
+      try {
+        const [domainRes, warehouseRes] = await Promise.all([
+          api.globalDomain.list(),
+          api.globalDomain.listWarehouses()
+        ]);
+        const domainList = domainRes.data || [];
+        warehouses.value = warehouseRes.data || [];
+
+        for (const domain of domainList) {
+          const detailRes = await api.globalDomain.get(domain.id);
+          domain.services = detailRes.data?.services || [];
+        }
+        domains.value = domainList;
+      } catch (e) {
+        ElMessage.error('加载失败');
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    const handleCreateDomain = async () => {
+      if (!domainForm.value.name || !domainForm.value.code) {
+        ElMessage.warning('请填写名称和代码');
+        return;
+      }
+      try {
+        await api.globalDomain.create(domainForm.value);
+        ElMessage.success('创建成功');
+        showCreateDialog.value = false;
+        domainForm.value = { name: '', description: '', code: '' };
+        loadData();
+      } catch (e) {
+        ElMessage.error('创建失败');
+      }
+    };
+
+    const handleEditDomain = (domain) => {
+      editForm.value = { id: domain.id, name: domain.name, description: domain.description || '', code: domain.code || '' };
+      showEditDialog.value = true;
+    };
+
+    const handleUpdateDomain = async () => {
+      try {
+        await api.globalDomain.update(editForm.value.id, {
+          name: editForm.value.name,
+          description: editForm.value.description,
+          code: editForm.value.code
+        });
+        ElMessage.success('更新成功');
+        showEditDialog.value = false;
+        loadData();
+      } catch (e) {
+        ElMessage.error('更新失败');
+      }
+    };
+
+    const handleDeleteDomain = async (domain) => {
+      try {
+        await ElMessageBox.confirm('确定删除该领域吗？', '提示', { type: 'warning' });
+        await api.globalDomain.delete(domain.id);
+        ElMessage.success('删除成功');
+        loadData();
+      } catch (e) {
+        if (e !== 'cancel') ElMessage.error('删除失败');
+      }
+    };
+
+    const handleGenerateDomainDoc = async (domain) => {
+      generatingDomainDoc.value = domain.id;
+      try {
+        await api.globalDomain.generateDoc(domain.id);
+        ElMessage.success('领域文档生成成功');
+        loadData();
+      } catch (e) {
+        ElMessage.error('生成失败');
+      } finally {
+        generatingDomainDoc.value = '';
+      }
+    };
+
+    const showDomainDoc = (domain) => {
+      docDialogTitle.value = domain.name + ' - 领域文档';
+      docContent.value = domain.documentContent || '';
+      showDocDialog.value = true;
+    };
+
+    const handleAddService = (domain) => {
+      currentDomainId.value = domain.id;
+      serviceForm.value = { warehouseId: '', serviceId: '', serviceName: '', description: '' };
+      serviceGlobsInput.value = '';
+      showServiceDialog.value = true;
+    };
+
+    const handleCreateService = async () => {
+      if (!serviceForm.value.warehouseId || !serviceForm.value.serviceId || !serviceForm.value.serviceName) {
+        ElMessage.warning('请填写必填项');
+        return;
+      }
+      try {
+        const sourceGlobs = serviceGlobsInput.value.split('\\n').map(s => s.trim()).filter(s => s.length > 0);
+        await api.globalDomain.createService(currentDomainId.value, { ...serviceForm.value, sourceGlobs });
+        ElMessage.success('创建成功');
+        showServiceDialog.value = false;
+        loadData();
+      } catch (e) {
+        ElMessage.error('创建失败');
+      }
+    };
+
+    const handleGenerateServiceDoc = async (domain, service) => {
+      generatingServiceDoc.value = service.id;
+      try {
+        await api.globalDomain.generateServiceDoc(domain.id, service.id);
+        ElMessage.success('服务文档生成成功');
+        loadData();
+      } catch (e) {
+        ElMessage.error('生成失败');
+      } finally {
+        generatingServiceDoc.value = '';
+      }
+    };
+
+    onMounted(loadData);
+
+    return {
+      loading, domains, activeDomains, warehouses,
+      showCreateDialog, showEditDialog, showServiceDialog,
+      domainForm, editForm, currentDomainId, serviceForm, serviceGlobsInput,
+      generatingDomainDoc, generatingServiceDoc,
+      showDocDialog, docDialogTitle, docContent, renderedDoc,
+      getWarehouseName, loadData,
+      handleCreateDomain, handleEditDomain, handleUpdateDomain, handleDeleteDomain,
+      handleGenerateDomainDoc, showDomainDoc,
+      handleAddService, handleCreateService, handleGenerateServiceDoc
+    };
+  }
+};

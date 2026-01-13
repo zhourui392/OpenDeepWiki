@@ -13,6 +13,7 @@ const Layout = {
         <el-menu mode="horizontal" :router="true" :default-active="$route.path" class="header-menu">
           <el-menu-item index="/">首页</el-menu-item>
           <el-menu-item index="/warehouses">仓库</el-menu-item>
+          <el-menu-item index="/domains">领域管理</el-menu-item>
           <el-menu-item index="/agents">Agents</el-menu-item>
         </el-menu>
       </el-header>

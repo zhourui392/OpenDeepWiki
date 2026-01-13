@@ -73,5 +73,19 @@ const api = {
   agent: {
     list() { return api.get('/v1/agents'); },
     get(id) { return api.get(`/v1/agents/${id}`); }
+  },
+
+  // 全局领域API
+  globalDomain: {
+    list() { return api.get('/v1/domains'); },
+    get(domainId) { return api.get(`/v1/domains/${domainId}`); },
+    create(data) { return api.post('/v1/domains', data); },
+    update(domainId, data) { return api.put(`/v1/domains/${domainId}`, data); },
+    delete(domainId) { return api.delete(`/v1/domains/${domainId}`); },
+    generateDoc(domainId) { return api.post(`/v1/domains/${domainId}/generate-doc`); },
+    listServices(domainId) { return api.get(`/v1/domains/${domainId}/services`); },
+    createService(domainId, data) { return api.post(`/v1/domains/${domainId}/services`, data); },
+    generateServiceDoc(domainId, serviceId) { return api.post(`/v1/domains/${domainId}/services/${serviceId}/generate-doc`); },
+    listWarehouses() { return api.get('/v1/domains/warehouses'); }
   }
 };

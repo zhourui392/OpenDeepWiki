@@ -20,7 +20,7 @@ public class DomainInfoEntity {
     @Column(length = 36)
     private String id;
 
-    @Column(name = "warehouse_id", nullable = false, length = 36)
+    @Column(name = "warehouse_id", length = 36)
     private String warehouseId;
 
     @Column(nullable = false, length = 128)

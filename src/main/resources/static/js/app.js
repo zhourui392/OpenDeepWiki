@@ -12,6 +12,7 @@ const routes = [
     children: [
       { path: '', component: Home },
       { path: 'warehouses', component: Warehouses },
+      { path: 'domains', component: GlobalDomains },
       { path: 'agents', component: Agents },
       { path: 'repository/:id', component: Repository },
       { path: 'repository/:id/domains', component: DomainManagement },
