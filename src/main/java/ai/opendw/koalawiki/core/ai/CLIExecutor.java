@@ -240,21 +240,33 @@ public class CLIExecutor {
     public boolean isAvailable(String cliCommand) {
         try {
             String[] command = wrapCommandForPlatform(new String[]{cliCommand, "--version"});
+            log.info("检查CLI可用性: {}", String.join(" ", command));
             ProcessBuilder pb = new ProcessBuilder(command);
+            pb.redirectErrorStream(true);
             Process process = pb.start();
 
-            // 等待最多2秒
-            boolean finished = process.waitFor(2000, TimeUnit.MILLISECONDS);
+            StringBuilder output = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    output.append(line).append("\n");
+                }
+            }
 
+            boolean finished = process.waitFor(5000, TimeUnit.MILLISECONDS);
             if (!finished) {
                 process.destroyForcibly();
+                log.warn("CLI检查超时: {}", cliCommand);
                 return false;
             }
 
-            return process.exitValue() == 0;  // Java 8兼容
+            int exitCode = process.exitValue();
+            log.info("CLI检查结果: {}, exitCode={}, output={}", cliCommand, exitCode, output.toString().trim());
+            return exitCode == 0;
 
         } catch (Exception e) {
-            log.debug("检查CLI工具失败: {} - {}", cliCommand, e.getMessage());
+            log.warn("检查CLI工具失败: {} - {}", cliCommand, e.getMessage());
             return false;
         }
     }
