@@ -24,6 +24,8 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class CLIExecutor {
 
+    private static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("win");
+
     @Value("${ai.timeout:600000}")
     private long timeoutMs;
 
@@ -47,10 +49,11 @@ public class CLIExecutor {
      * @throws CLIExecutionException CLI执行异常
      */
     public String execute(String[] command, String workingDirectory) throws CLIExecutionException {
-        log.debug("执行CLI命令: {}, 工作目录: {}", String.join(" ", command), workingDirectory);
+        String[] actualCommand = wrapCommandForPlatform(command);
+        log.debug("执行CLI命令: {}, 工作目录: {}", String.join(" ", actualCommand), workingDirectory);
 
         try {
-            ProcessBuilder pb = new ProcessBuilder(command);
+            ProcessBuilder pb = new ProcessBuilder(actualCommand);
             pb.redirectErrorStream(true);
 
             if (workingDirectory != null) {
@@ -145,10 +148,11 @@ public class CLIExecutor {
      * @throws CLIExecutionException CLI执行异常
      */
     public String executeWithInput(String[] command, String input, String workingDirectory) throws CLIExecutionException {
-        log.debug("执行CLI命令(带输入): {}, 工作目录: {}", String.join(" ", command), workingDirectory);
+        String[] actualCommand = wrapCommandForPlatform(command);
+        log.debug("执行CLI命令(带输入): {}, 工作目录: {}", String.join(" ", actualCommand), workingDirectory);
 
         try {
-            ProcessBuilder pb = new ProcessBuilder(command);
+            ProcessBuilder pb = new ProcessBuilder(actualCommand);
             pb.redirectErrorStream(true);
 
             if (workingDirectory != null) {
@@ -235,7 +239,8 @@ public class CLIExecutor {
      */
     public boolean isAvailable(String cliCommand) {
         try {
-            ProcessBuilder pb = new ProcessBuilder(cliCommand, "--version");
+            String[] command = wrapCommandForPlatform(new String[]{cliCommand, "--version"});
+            ProcessBuilder pb = new ProcessBuilder(command);
             Process process = pb.start();
 
             // 等待最多2秒
@@ -273,6 +278,21 @@ public class CLIExecutor {
         } catch (Exception e) {
             log.debug("关闭进程错误流失败: {}", e.getMessage());
         }
+    }
+
+    /**
+     * 根据操作系统包装命令
+     * Windows需要通过cmd.exe执行命令
+     */
+    private String[] wrapCommandForPlatform(String[] command) {
+        if (!IS_WINDOWS || command.length == 0) {
+            return command;
+        }
+        String[] wrapped = new String[command.length + 2];
+        wrapped[0] = "cmd.exe";
+        wrapped[1] = "/c";
+        System.arraycopy(command, 0, wrapped, 2, command.length);
+        return wrapped;
     }
 
     /**
