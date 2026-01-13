@@ -121,7 +121,9 @@ public class DomainDocumentService {
      * 查询领域下的服务
      */
     public List<ServiceDocumentLibrary> listServicesByDomain(String domainId) {
-        return serviceRepository.findByDomainId(domainId).stream()
+        List<ServiceDocumentConfigEntity> entities = serviceRepository.findByDomainId(domainId);
+        log.info("查询领域服务: domainId={}, 服务数量={}", domainId, entities.size());
+        return entities.stream()
                 .map(this::toServiceModel)
                 .collect(Collectors.toList());
     }
