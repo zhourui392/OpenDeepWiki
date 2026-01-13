@@ -1,0 +1,104 @@
+# SQLite数据库配置
+spring:
+  application:
+    name: koalawiki
+
+  datasource:
+    driver-class-name: org.sqlite.JDBC
+    url: jdbc:sqlite:${SQLITE_DB_PATH:${user.home}/.qpon/data/koalawiki.db}
+    hikari:
+      maximum-pool-size: 1
+      minimum-idle: 1
+      connection-timeout: 30000
+
+  jpa:
+    database-platform: org.sqlite.hibernate.dialect.SQLiteDialect
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: false
+    encoding: UTF-8
+    table: flyway_schema_history
+
+# 服务器配置
+server:
+  port: ${SERVER_PORT:18081}
+  servlet:
+    context-path: /
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    ai.opendw.koalawiki: DEBUG
+    org.hibernate.SQL: WARN
+    org.springframework.web: INFO
+    org.flywaydb: DEBUG
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,flyway
+  endpoint:
+    health:
+      show-details: always
+
+# Git配置
+koalawiki:
+  git:
+    storage-path: ${GIT_STORAGE_PATH:${user.home}/.qpon/git}
+    max-depth: 0
+    timeout: 300000
+    cache-cleanup-days: 30
+    default-username: ${GIT_DEFAULT_USERNAME:}
+    default-password: ${GIT_DEFAULT_PASSWORD:}
+
+  # AI配置
+  ai:
+    enabled: ${AI_ENABLED:true}
+    provider: openai
+    api-key: ${OPENAI_API_KEY:}
+    api-endpoint: ${OPENAI_API_ENDPOINT:https://api.openai.com/v1}
+    chat-model: gpt-4
+    analysis-model: gpt-4
+    timeout: 600000
+    max-retries: 3
+    retry-delay: 1000
+    cache:
+      enabled: true
+      ttl: 3600
+      max-size: 1000
+    test-on-startup: ${AI_TEST_ON_STARTUP:false}
+
+  # 仓库同步配置
+  sync:
+    enabled: true
+    cron: "0 0 */6 * * ?"
+    batch-size: 10
+    max-concurrent: 3
+
+  # 文档自动生成配置
+  doc:
+    auto-generate: true
+    agent-type: claude
+
+  # 文档同步配置
+  doc-sync:
+    enabled: true
+    cron: "0 0 2 * * ?"
+
+# AI Agent配置
+ai:
+  cli:
+    claude: claude
+  timeout: 600000
