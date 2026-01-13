@@ -29,7 +29,9 @@ const router = createRouter({
 });
 
 // 创建应用
-const app = createApp({});
+const app = createApp({
+  template: '<router-view></router-view>'
+});
 
 // 注册Element Plus
 app.use(ElementPlus);
