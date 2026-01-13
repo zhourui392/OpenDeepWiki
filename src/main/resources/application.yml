@@ -7,8 +7,8 @@ spring:
     driver-class-name: org.sqlite.JDBC
     url: jdbc:sqlite:${SQLITE_DB_PATH:${user.home}/.qpon/data/koalawiki.db}?date_string_format=yyyy-MM-dd HH:mm:ss&date_class=text
     hikari:
-      maximum-pool-size: 1
-      minimum-idle: 1
+      maximum-pool-size: 20
+      minimum-idle: 10
       connection-timeout: 30000
 
   jpa:

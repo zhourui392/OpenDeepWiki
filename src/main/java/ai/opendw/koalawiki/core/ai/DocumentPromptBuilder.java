@@ -24,6 +24,16 @@ public class DocumentPromptBuilder {
     private final AIPromptTemplateService promptTemplateLoader;
 
     /**
+     * 构建简单的架构分析提示词
+     * 让Claude在工作空间下自己读取代码进行分析
+     *
+     * @return 提示词文本
+     */
+    public String buildSimpleArchitecturePrompt() {
+        return promptTemplateLoader.loadTemplate("project_analysis", "claude");
+    }
+
+    /**
      * 构建项目级架构分析提示词
      *
      * @param structure 项目结构

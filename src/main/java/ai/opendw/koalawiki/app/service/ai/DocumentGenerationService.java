@@ -231,16 +231,17 @@ public class DocumentGenerationService {
 
     /**
      * 生成架构文档
+     * 直接在项目工作空间下执行Claude CLI，让Claude自己读取代码
      */
     private AIDocument generateArchitectureDoc(String warehouseId, String projectPath, String agentType) {
         try {
-            ProjectStructure structure = projectScanner.scanProject(projectPath);
-            log.info("项目扫描完成: 入口点数={}", structure.getEntryPoints().size());
-
             AIAgent agent = agentFactory.getAgent(agentType);
-            String prompt = promptBuilder.buildProjectAnalysisPrompt(structure);
-            String content = agent.execute(prompt);
+            String prompt = promptBuilder.buildSimpleArchitecturePrompt();
 
+            // 在项目目录下执行CLI，让Claude自己读取代码
+            String content = agent.execute(prompt, projectPath);
+
+            String projectName = new File(projectPath).getName();
             AIDocumentEntity entity = documentRepository.findByWarehouseIdAndSourceFile(warehouseId, projectPath)
                     .orElse(new AIDocumentEntity());
 
@@ -251,7 +252,7 @@ public class DocumentGenerationService {
             }
 
             applyDefaultServiceContext(entity);
-            entity.setTitle(structure.getProjectName() + " - 架构文档");
+            entity.setTitle(projectName + " - 架构文档");
             entity.setContent(content);
             entity.setStatus("COMPLETED");
             entity.setAgentType(agent.getName());
