@@ -5,7 +5,7 @@ spring:
 
   datasource:
     driver-class-name: org.sqlite.JDBC
-    url: jdbc:sqlite:${SQLITE_DB_PATH:${user.home}/.qpon/data/koalawiki.db}
+    url: jdbc:sqlite:${SQLITE_DB_PATH:${user.home}/.qpon/data/koalawiki.db}?date_string_format=yyyy-MM-dd HH:mm:ss.SSS
     hikari:
       maximum-pool-size: 1
       minimum-idle: 1
@@ -66,19 +66,13 @@ koalawiki:
   # AI配置
   ai:
     enabled: ${AI_ENABLED:true}
-    provider: openai
-    api-key: ${OPENAI_API_KEY:}
-    api-endpoint: ${OPENAI_API_ENDPOINT:https://api.openai.com/v1}
-    chat-model: gpt-4
-    analysis-model: gpt-4
+    provider: claude
+    claude-cli-path: ${CLAUDE_CLI_PATH:claude}
     timeout: 600000
-    max-retries: 3
-    retry-delay: 1000
     cache:
       enabled: true
       ttl: 3600
       max-size: 1000
-    test-on-startup: ${AI_TEST_ON_STARTUP:false}
 
   # 仓库同步配置
   sync:

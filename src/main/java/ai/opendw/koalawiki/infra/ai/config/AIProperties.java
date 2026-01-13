@@ -16,27 +16,22 @@ public class AIProperties {
     /**
      * AI提供商类型
      */
-    private String provider = "openai";
+    private String provider = "claude";
 
     /**
-     * API密钥
+     * Claude CLI路径
      */
-    private String apiKey;
-
-    /**
-     * API端点
-     */
-    private String endpoint = "https://api.openai.com/v1";
+    private String claudeCliPath = "claude";
 
     /**
      * 聊天模型
      */
-    private String chatModel = "gpt-4-turbo-preview";
+    private String chatModel = "claude-code-cli";
 
     /**
      * 分析模型
      */
-    private String analysisModel = "gpt-4-turbo-preview";
+    private String analysisModel = "claude-code-cli";
 
     /**
      * 最大token数

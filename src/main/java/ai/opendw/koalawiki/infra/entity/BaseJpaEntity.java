@@ -3,6 +3,8 @@ package ai.opendw.koalawiki.infra.entity;
 import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -26,6 +28,7 @@ public abstract class BaseJpaEntity implements Serializable {
      * 创建时间
      */
     @Column(name = "created_at", nullable = false, updatable = false)
+    @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
     public String getId() {
