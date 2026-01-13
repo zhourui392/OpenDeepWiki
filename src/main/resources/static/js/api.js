@@ -30,12 +30,12 @@ const api = {
   // 仓库API
   warehouse: {
     list(page = 1, pageSize = 10, keyword = '') {
-      return api.get(`/v1/warehouses?page=${page}&pageSize=${pageSize}&keyword=${keyword}`);
+      return api.get(`/warehouse/list?page=${page}&pageSize=${pageSize}&keyword=${keyword}`);
     },
-    get(id) { return api.get(`/v1/warehouses/${id}`); },
-    create(data) { return api.post('/v1/warehouses', data); },
-    delete(id) { return api.delete(`/v1/warehouses/${id}`); },
-    sync(id, force = false) { return api.post(`/v1/warehouses/${id}/sync?forceSync=${force}`); }
+    get(id) { return api.get(`/warehouse/list?warehouseId=${id}`); },
+    create(data) { return api.post('/warehouse/SubmitWarehouse', data); },
+    delete(id) { return api.post(`/warehouse/delete?warehouseId=${id}`); },
+    sync(id, force = false) { return api.post('/warehouse/sync/trigger', { warehouseId: id, forceSync: force }); }
   },
 
   // 领域API
