@@ -2,8 +2,13 @@ package ai.opendw.koalawiki.core.ai;
 
 import ai.opendw.koalawiki.core.analysis.model.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StreamUtils;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,20 +22,29 @@ import java.util.stream.Collectors;
  * @author OpenDeepWiki Team
  * @since 2025-11-16
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class DocumentPromptBuilder {
+
+    private static final String PROJECT_ANALYSIS_PROMPT_PATH = "prompts/project-analysis-prompt.txt";
 
     private final AIPromptTemplateService promptTemplateLoader;
 
     /**
      * 构建简单的架构分析提示词
-     * 让Claude在工作空间下自己读取代码进行分析
+     * 从prompts目录加载提示词文件
      *
      * @return 提示词文本
      */
     public String buildSimpleArchitecturePrompt() {
-        return promptTemplateLoader.loadTemplate("project_analysis", "claude");
+        try {
+            ClassPathResource resource = new ClassPathResource(PROJECT_ANALYSIS_PROMPT_PATH);
+            return StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            log.error("加载架构分析提示词文件失败", e);
+            throw new RuntimeException("加载提示词文件失败: " + e.getMessage(), e);
+        }
     }
 
     /**
