@@ -106,15 +106,8 @@ public class WarehouseController {
                 warehouse.setGitPassword(request.getGitPassword());
             }
 
-            // 4. 保存仓库
+            // 5. 保存仓库
             warehouse = warehouseRepository.save(warehouse);
-
-            // 5. 异步触发同步
-            try {
-                warehouseSyncService.triggerSync(warehouse.getId(), false);
-            } catch (Exception e) {
-                log.warn("触发同步失败，但仓库已创建: {}", warehouse.getId(), e);
-            }
 
             // 6. 返回结果
             WarehouseResponse response = convertToResponse(warehouse);
@@ -158,13 +151,6 @@ public class WarehouseController {
             }
 
             warehouse = warehouseRepository.save(warehouse);
-
-            // 异步触发同步
-            try {
-                warehouseSyncService.triggerSync(warehouse.getId(), false);
-            } catch (Exception e) {
-                log.warn("触发同步失败，但仓库已创建: {}", warehouse.getId(), e);
-            }
 
             WarehouseResponse response = convertToResponse(warehouse);
             return ResponseEntity.ok(Result.success(response, "仓库创建成功"));
