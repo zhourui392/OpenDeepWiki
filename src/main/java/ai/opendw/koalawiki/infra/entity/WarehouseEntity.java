@@ -19,7 +19,6 @@ import java.util.Date;
         @Index(name = "idx_organization", columnList = "organization_name"),
         @Index(name = "idx_status", columnList = "status"),
         @Index(name = "idx_classify", columnList = "classify"),
-        @Index(name = "idx_user_id", columnList = "user_id"),
         @Index(name = "idx_created_at", columnList = "created_at"),
         @Index(name = "idx_is_recommended", columnList = "is_recommended")
     })
@@ -128,12 +127,6 @@ public class WarehouseEntity extends BaseJpaEntity {
      */
     @Column(name = "forks", nullable = false)
     private Integer forks = 0;
-
-    /**
-     * 创建用户ID
-     */
-    @Column(name = "user_id")
-    private String userId;
 
     /**
      * 是否启用同步
@@ -284,14 +277,6 @@ public class WarehouseEntity extends BaseJpaEntity {
 
     public void setForks(Integer forks) {
         this.forks = forks;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
     }
 
     public Boolean getEnableSync() {

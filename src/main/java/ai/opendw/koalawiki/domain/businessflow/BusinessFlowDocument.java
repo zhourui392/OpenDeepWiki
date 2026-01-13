@@ -102,11 +102,6 @@ public class BusinessFlowDocument extends BaseEntity {
     private String description;
 
     /**
-     * 创建用户ID
-     */
-    private String userId;
-
-    /**
      * 更新时间
      */
     private Date updatedAt;

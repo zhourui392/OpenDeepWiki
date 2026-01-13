@@ -2,9 +2,7 @@ package ai.opendw.koalawiki.web.controller;
 
 import ai.opendw.koalawiki.core.service.IWarehouseSyncService;
 import ai.opendw.koalawiki.domain.warehouse.WarehouseStatus;
-import ai.opendw.koalawiki.infra.entity.AccessLogEntity;
 import ai.opendw.koalawiki.infra.entity.WarehouseEntity;
-import ai.opendw.koalawiki.infra.repository.AccessLogRepository;
 import ai.opendw.koalawiki.infra.repository.WarehouseRepository;
 import ai.opendw.koalawiki.web.dto.Result;
 import ai.opendw.koalawiki.web.dto.warehouse.CustomSubmitWarehouseRequest;
@@ -55,7 +53,6 @@ public class RepositoryController {
 
     private final WarehouseRepository warehouseRepository;
     private final IWarehouseSyncService warehouseSyncService;
-    private final AccessLogRepository accessLogRepository;
     private final ai.opendw.koalawiki.core.git.GitPathResolver gitPathResolver;
 
     /**
@@ -179,7 +176,6 @@ public class RepositoryController {
             warehouse.setBranch(request.getBranch() != null ? request.getBranch() : "main");
             warehouse.setStatus(WarehouseStatus.PENDING);
             warehouse.setClassify(ClassifyType.DOCUMENTATION);
-            warehouse.setUserId("default-user"); // TODO: 从认证信息获取
 
             if (request.getGitUserName() != null) {
                 warehouse.setGitUserName(request.getGitUserName());
@@ -910,7 +906,6 @@ public class RepositoryController {
         response.setVersion(entity.getVersion());
         response.setIsEmbedded(false); // Entity中没有这个字段
         response.setIsRecommended(false); // Entity中没有这个字段
-        response.setUserId(entity.getUserId());
         return response;
     }
 
@@ -1038,105 +1033,5 @@ public class RepositoryController {
         public int getDirectoryCount() {
             return directoryCount;
         }
-    }
-
-    /**
-     * 获取仓库日志
-     * 返回访问日志和操作日志
-     *
-     * @param warehouseId 仓库ID
-     * @param page 页码
-     * @param pageSize 每页大小
-     * @return 日志分页列表
-     * @author zhourui(V33215020)
-     * @since 2025/11/15
-     */
-    @GetMapping("/RepositoryLogs")
-    public ResponseEntity<Result<Page<RepositoryLogEntry>>> getRepositoryLogs(
-            @RequestParam @NotBlank String warehouseId,
-            @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Min(1) int pageSize) {
-
-        log.debug("获取仓库日志: warehouseId={}, page={}, pageSize={}",
-                warehouseId, page, pageSize);
-
-        try {
-            // 验证仓库是否存在
-            Optional<WarehouseEntity> warehouseOpt = warehouseRepository.findById(warehouseId);
-            if (!warehouseOpt.isPresent()) {
-                return ResponseEntity.ok(Result.error("仓库不存在"));
-            }
-
-            // 获取访问日志
-            Pageable pageable = PageRequest.of(page - 1, pageSize,
-                    org.springframework.data.domain.Sort.by(
-                            org.springframework.data.domain.Sort.Direction.DESC, "accessTime"));
-
-            Page<AccessLogEntity> accessLogs = accessLogRepository
-                    .findByWarehouseIdOrderByAccessTimeDesc(warehouseId, pageable);
-
-            // 转换为日志条目
-            Page<RepositoryLogEntry> logEntries = accessLogs.map(log -> {
-                RepositoryLogEntry entry = new RepositoryLogEntry();
-                entry.setId(log.getId());
-                entry.setWarehouseId(log.getWarehouseId());
-                entry.setAction(log.getAction());
-                entry.setUserId(log.getUserId());
-                entry.setIpAddress(log.getIpAddress());
-                entry.setRequestUri(log.getRequestUri());
-                entry.setRequestMethod(log.getRequestMethod());
-                entry.setStatusCode(log.getStatusCode());
-                entry.setResponseTime(log.getResponseTime());
-                entry.setAccessTime(log.getAccessTime());
-                entry.setErrorMessage(log.getErrorMessage());
-                return entry;
-            });
-
-            return ResponseEntity.ok(Result.success(logEntries));
-
-        } catch (Exception e) {
-            log.error("获取仓库日志失败: warehouseId={}", warehouseId, e);
-            return ResponseEntity.ok(Result.error("获取日志失败: " + e.getMessage()));
-        }
-    }
-
-    /**
-     * 仓库日志条目
-     */
-    public static class RepositoryLogEntry {
-        private String id;
-        private String warehouseId;
-        private String action;
-        private String userId;
-        private String ipAddress;
-        private String requestUri;
-        private String requestMethod;
-        private Integer statusCode;
-        private Integer responseTime;
-        private Date accessTime;
-        private String errorMessage;
-
-        public String getId() { return id; }
-        public void setId(String id) { this.id = id; }
-        public String getWarehouseId() { return warehouseId; }
-        public void setWarehouseId(String warehouseId) { this.warehouseId = warehouseId; }
-        public String getAction() { return action; }
-        public void setAction(String action) { this.action = action; }
-        public String getUserId() { return userId; }
-        public void setUserId(String userId) { this.userId = userId; }
-        public String getIpAddress() { return ipAddress; }
-        public void setIpAddress(String ipAddress) { this.ipAddress = ipAddress; }
-        public String getRequestUri() { return requestUri; }
-        public void setRequestUri(String requestUri) { this.requestUri = requestUri; }
-        public String getRequestMethod() { return requestMethod; }
-        public void setRequestMethod(String requestMethod) { this.requestMethod = requestMethod; }
-        public Integer getStatusCode() { return statusCode; }
-        public void setStatusCode(Integer statusCode) { this.statusCode = statusCode; }
-        public Integer getResponseTime() { return responseTime; }
-        public void setResponseTime(Integer responseTime) { this.responseTime = responseTime; }
-        public Date getAccessTime() { return accessTime; }
-        public void setAccessTime(Date accessTime) { this.accessTime = accessTime; }
-        public String getErrorMessage() { return errorMessage; }
-        public void setErrorMessage(String errorMessage) { this.errorMessage = errorMessage; }
     }
 }

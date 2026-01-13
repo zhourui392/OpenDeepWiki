@@ -175,14 +175,6 @@ public class BusinessFlowDocumentBuilder {
     }
 
     /**
-     * 设置用户ID
-     */
-    public BusinessFlowDocumentBuilder userId(String userId) {
-        document.setUserId(userId);
-        return this;
-    }
-
-    /**
      * 设置创建时间
      */
     public BusinessFlowDocumentBuilder createdAt(Date createdAt) {

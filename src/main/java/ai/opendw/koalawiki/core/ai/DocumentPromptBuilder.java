@@ -29,7 +29,7 @@ public class DocumentPromptBuilder {
 
     private static final String PROJECT_ANALYSIS_PROMPT_PATH = "prompts/project-analysis-prompt.txt";
 
-    private final AIPromptTemplateService promptTemplateLoader;
+    private final FilePromptTemplateService promptTemplateLoader;
 
     /**
      * 构建简单的架构分析提示词

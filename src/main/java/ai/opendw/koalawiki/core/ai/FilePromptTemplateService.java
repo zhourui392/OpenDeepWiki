@@ -25,6 +25,7 @@ public class FilePromptTemplateService {
     private static final String PROMPT_DIR = "prompts/";
     private static final String SERVICE_DOC_PROMPT = "service-doc-prompt.txt";
     private static final String DOMAIN_DOC_PROMPT = "domain-doc-prompt.txt";
+    private static final String PROJECT_ANALYSIS_PROMPT = "project-analysis-prompt.txt";
 
     private final Map<String, String> templateCache = new ConcurrentHashMap<>();
 
@@ -40,6 +41,57 @@ public class FilePromptTemplateService {
      */
     public String loadDomainDocPrompt() {
         return loadPromptFile(DOMAIN_DOC_PROMPT);
+    }
+
+    /**
+     * 加载项目分析提示词
+     */
+    public String loadProjectAnalysisPrompt() {
+        return loadPromptFile(PROJECT_ANALYSIS_PROMPT);
+    }
+
+    /**
+     * 根据类型加载提示词模板
+     */
+    public String loadTemplate(String promptType, String agentType) {
+        log.debug("加载提示词模板: promptType={}, agentType={}", promptType, agentType);
+        
+        switch (promptType.toLowerCase()) {
+            case "project_analysis":
+                return loadProjectAnalysisPrompt();
+            case "service_doc":
+                return loadServiceDocPrompt();
+            case "domain_doc":
+                return loadDomainDocPrompt();
+            default:
+                log.warn("未知的提示词类型: {}", promptType);
+                throw new IllegalArgumentException("未知的提示词类型: " + promptType);
+        }
+    }
+
+    /**
+     * 渲染模板（替换占位符）
+     */
+    public String renderTemplate(String template, Map<String, String> variables) {
+        if (template == null || variables == null) {
+            return template;
+        }
+
+        String result = template;
+        for (Map.Entry<String, String> entry : variables.entrySet()) {
+            String placeholder = "{" + entry.getKey() + "}";
+            result = result.replace(placeholder, entry.getValue() != null ? entry.getValue() : "");
+        }
+
+        return result;
+    }
+
+    /**
+     * 加载并渲染模板
+     */
+    public String loadAndRender(String promptType, String agentType, Map<String, String> variables) {
+        String template = loadTemplate(promptType, agentType);
+        return renderTemplate(template, variables);
     }
 
     /**

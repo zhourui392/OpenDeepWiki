@@ -141,7 +141,6 @@ public class BusinessFlowService {
      * @param repositoryUrls Git仓库URL列表
      * @param credentials    认证信息
      * @param maxDepth       最大追踪深度
-     * @param userId         用户ID
      * @return 按关键词分组的流程结果
      */
     @Transactional(rollbackFor = Exception.class)
@@ -149,8 +148,7 @@ public class BusinessFlowService {
             List<String> keywords,
             List<String> repositoryUrls,
             GitCredentials credentials,
-            int maxDepth,
-            String userId) {
+            int maxDepth) {
 
         log.info("开始基于关键词生成业务流程，关键词：{}，仓库数量：{}", keywords, repositoryUrls.size());
 
@@ -217,8 +215,7 @@ public class BusinessFlowService {
                             match.getRelevanceScore(),
                             primaryRepoUrl,
                             primaryRepoVersion,
-                            repositoryUrls,
-                            userId
+                            repositoryUrls
                     );
 
                     BusinessFlowDocumentEntity entity = flowDocumentMapper.toEntity(document);
@@ -358,8 +355,7 @@ public class BusinessFlowService {
             int relevanceScore,
             String primaryRepoUrl,
             String primaryRepoVersion,
-            List<String> allRepoUrls,
-            String userId) {
+            List<String> allRepoUrls) {
 
         // 提取关联服务
         Set<String> relatedServices = extractServices(flow.getCallChain());
@@ -391,7 +387,6 @@ public class BusinessFlowService {
         document.setRepositoryVersion(primaryRepoVersion);
         document.setDependencyRepositories(dependencyReposJson);
         document.setDescription(flow.getDescription());
-        document.setUserId(userId);
 
         return document;
     }

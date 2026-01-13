@@ -165,7 +165,6 @@ public class WarehouseAutoSyncTask {
         warehouse.setAddress(entity.getAddress());
         warehouse.setStatus(entity.getStatus());
         warehouse.setClassify(entity.getClassify());
-        warehouse.setUserId(entity.getUserId());
         warehouse.setEnableSync(entity.getEnableSync());
         warehouse.setCreatedAt(entity.getCreatedAt());
         return warehouse;

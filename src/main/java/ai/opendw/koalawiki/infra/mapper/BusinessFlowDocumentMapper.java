@@ -39,7 +39,6 @@ public class BusinessFlowDocumentMapper {
         domain.setRepositoryVersion(entity.getRepositoryVersion());
         domain.setDependencyRepositories(entity.getDependencyRepositories());
         domain.setDescription(entity.getDescription());
-        domain.setUserId(entity.getUserId());
         domain.setCreatedAt(entity.getCreatedAt());
         domain.setUpdatedAt(entity.getUpdatedAt());
 
@@ -72,7 +71,6 @@ public class BusinessFlowDocumentMapper {
         entity.setRepositoryVersion(domain.getRepositoryVersion());
         entity.setDependencyRepositories(domain.getDependencyRepositories());
         entity.setDescription(domain.getDescription());
-        entity.setUserId(domain.getUserId());
         entity.setCreatedAt(domain.getCreatedAt());
         entity.setUpdatedAt(domain.getUpdatedAt());
 

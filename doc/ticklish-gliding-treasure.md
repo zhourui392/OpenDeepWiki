@@ -279,3 +279,96 @@ curl -X POST http://localhost:8080/api/v1/warehouses/{warehouseId}/domains \
 - 访问领域管理页面
 - 创建领域时填写领域代码
 - 点击"生成文档"按钮验证功能
+
+---
+
+## 验证示例
+
+### 测试数据
+- **领域名称**: 履约域
+- **领域代码**: fulfillment
+- **仓库地址**: http://code.oppoer.me/digital-food-server/qpon-fulfillment-center.git
+- **仓库名称**: qpon-fulfillment-center
+
+### 预期目录结构
+```
+工作空间/
+└── fulfillment/                    # 领域代码
+    └── qpon-fulfillment-center/    # 仓库名称
+```
+
+### 验证步骤（使用 Chrome DevTools MCP）
+
+#### 步骤1: 打开领域管理页面
+```
+mcp_chrome-devtools_navigate_page: url=http://localhost:8080/#/domains
+mcp_chrome-devtools_take_snapshot: 获取页面元素
+```
+
+#### 步骤2: 创建领域
+```
+mcp_chrome-devtools_click: uid=创建领域按钮
+mcp_chrome-devtools_fill_form:
+  - 领域名称: 履约域
+  - 领域代码: fulfillment
+  - 描述: 履约中心服务
+mcp_chrome-devtools_click: uid=确认按钮
+mcp_chrome-devtools_wait_for: text=创建成功
+```
+**校验**: 页面显示"创建成功"提示
+
+#### 步骤3: 添加仓库
+```
+mcp_chrome-devtools_navigate_page: url=http://localhost:8080/#/warehouses
+mcp_chrome-devtools_click: uid=添加仓库按钮
+mcp_chrome-devtools_fill_form:
+  - 仓库名称: qpon-fulfillment-center
+  - 仓库地址: http://code.oppoer.me/digital-food-server/qpon-fulfillment-center.git
+  - 分支: master
+mcp_chrome-devtools_click: uid=确认按钮
+mcp_chrome-devtools_wait_for: text=添加成功
+```
+**校验**: 仓库列表中出现 qpon-fulfillment-center
+
+#### 步骤4: 关联服务到领域
+```
+mcp_chrome-devtools_navigate_page: url=http://localhost:8080/#/domains
+mcp_chrome-devtools_click: uid=履约域行
+mcp_chrome-devtools_click: uid=添加服务按钮
+mcp_chrome-devtools_fill: uid=仓库选择框, value=qpon-fulfillment-center
+mcp_chrome-devtools_click: uid=确认按钮
+```
+**校验**: 服务列表中显示 qpon-fulfillment-center
+
+#### 步骤5: 生成服务文档
+```
+mcp_chrome-devtools_click: uid=qpon-fulfillment-center服务行的生成文档按钮
+mcp_chrome-devtools_wait_for: text=文档生成中
+mcp_chrome-devtools_wait_for: text=生成完成 (timeout=300000)
+```
+**校验**: 
+- 服务状态变为"已生成"
+- 可点击查看文档内容
+
+#### 步骤6: 生成领域文档
+```
+mcp_chrome-devtools_click: uid=履约域的生成领域文档按钮
+mcp_chrome-devtools_wait_for: text=领域文档生成完成 (timeout=300000)
+```
+**校验**: 领域文档状态更新
+
+#### 步骤7: 验证网络请求
+```
+mcp_chrome-devtools_list_network_requests: resourceTypes=["fetch","xhr"]
+mcp_chrome-devtools_get_network_request: reqid=对应请求ID
+```
+**校验**: 
+- POST /api/v1/domains 返回 200
+- POST /api/v1/warehouses 返回 200
+- POST /api/v1/services/{id}/generate-doc 返回 200
+
+#### 步骤8: 验证控制台无错误
+```
+mcp_chrome-devtools_list_console_messages: types=["error"]
+```
+**校验**: 无 error 级别日志

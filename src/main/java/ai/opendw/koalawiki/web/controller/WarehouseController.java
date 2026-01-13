@@ -99,7 +99,6 @@ public class WarehouseController {
             warehouse.setBranch(request.getBranch() != null ? request.getBranch() : "master");
             warehouse.setStatus(WarehouseStatus.PENDING);
             warehouse.setClassify(ClassifyType.DOCUMENTATION);
-            warehouse.setUserId("default-admin-uuid-0001"); // TODO: 从认证信息获取
 
             if (request.getGitUserName() != null) {
                 warehouse.setGitUserName(request.getGitUserName());
@@ -143,7 +142,6 @@ public class WarehouseController {
             warehouse.setBranch(request.getBranch() != null ? request.getBranch() : "master");
             warehouse.setStatus(WarehouseStatus.PENDING);
             warehouse.setClassify(ClassifyType.DOCUMENTATION);
-            warehouse.setUserId("default-admin-uuid-0001"); // TODO: 从认证信息获取
 
             if (request.getGitUserName() != null) {
                 warehouse.setGitUserName(request.getGitUserName());
@@ -642,7 +640,6 @@ public class WarehouseController {
         response.setVersion(entity.getVersion());
         response.setIsEmbedded(false); // Entity中没有这个字段
         response.setIsRecommended(false); // Entity中没有这个字段
-        response.setUserId(entity.getUserId());
         return response;
     }
 

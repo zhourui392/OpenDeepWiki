@@ -116,11 +116,6 @@ public class Warehouse extends BaseEntity {
     private Integer forks = 0;
 
     /**
-     * 创建用户id
-     */
-    private String userId;
-
-    /**
      * 是否启用同步
      */
     private Boolean enableSync = true;

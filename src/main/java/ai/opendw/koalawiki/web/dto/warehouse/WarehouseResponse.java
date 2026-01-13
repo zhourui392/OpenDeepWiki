@@ -85,9 +85,4 @@ public class WarehouseResponse {
      * 是否推荐
      */
     private Boolean isRecommended;
-
-    /**
-     * 创建用户ID
-     */
-    private String userId;
 }

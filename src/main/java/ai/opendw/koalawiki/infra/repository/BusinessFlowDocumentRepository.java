@@ -54,11 +54,6 @@ public interface BusinessFlowDocumentRepository extends JpaRepository<BusinessFl
     );
 
     /**
-     * 按用户ID查询
-     */
-    Page<BusinessFlowDocumentEntity> findByUserId(String userId, Pageable pageable);
-
-    /**
      * 按关键词统计数量
      */
     long countByKeyword(String keyword);

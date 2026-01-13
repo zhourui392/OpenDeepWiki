@@ -22,15 +22,6 @@ import java.util.List;
 public interface WarehouseRepository extends JpaRepository<WarehouseEntity, String> {
 
     /**
-     * 根据用户ID查询仓库列表
-     *
-     * @param userId   用户ID
-     * @param pageable 分页参数
-     * @return 仓库分页
-     */
-    Page<WarehouseEntity> findByUserIdOrderByCreatedAtDesc(String userId, Pageable pageable);
-
-    /**
      * 根据状态查询仓库列表
      *
      * @param status   仓库状态
@@ -64,14 +55,6 @@ public interface WarehouseRepository extends JpaRepository<WarehouseEntity, Stri
      * @return 仓库实体
      */
     WarehouseEntity findByAddress(String address);
-
-    /**
-     * 统计用户的仓库数量
-     *
-     * @param userId 用户ID
-     * @return 仓库数量
-     */
-    long countByUserId(String userId);
 
     /**
      * 更新仓库星标数

@@ -294,10 +294,15 @@ public class CLIExecutor {
 
     /**
      * 根据操作系统包装命令
-     * Windows需要通过cmd.exe执行命令
+     * Windows需要通过cmd.exe执行命令，但claude等Node.js CLI工具除外
      */
     private String[] wrapCommandForPlatform(String[] command) {
         if (!IS_WINDOWS || command.length == 0) {
+            return command;
+        }
+        // claude CLI 是 Node.js 应用，直接调用不需要 cmd.exe 包装
+        String cmd = command[0].toLowerCase();
+        if (cmd.equals("claude") || cmd.endsWith("claude.cmd") || cmd.endsWith("claude.exe")) {
             return command;
         }
         String[] wrapped = new String[command.length + 2];

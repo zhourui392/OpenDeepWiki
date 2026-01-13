@@ -16,8 +16,7 @@ import java.util.Date;
                 @Index(name = "idx_api_path", columnList = "api_path"),
                 @Index(name = "idx_class_name", columnList = "class_name"),
                 @Index(name = "idx_repository_version", columnList = "repository_version"),
-                @Index(name = "idx_created_at", columnList = "created_at"),
-                @Index(name = "idx_user_id", columnList = "user_id")
+                @Index(name = "idx_created_at", columnList = "created_at")
         },
         uniqueConstraints = {
                 @UniqueConstraint(
@@ -129,12 +128,6 @@ public class BusinessFlowDocumentEntity extends BaseJpaEntity {
     @Column(name = "description", columnDefinition = "TEXT")
     @Lob
     private String description;
-
-    /**
-     * 创建用户ID
-     */
-    @Column(name = "user_id", length = 50)
-    private String userId;
 
     /**
      * 更新时间
@@ -270,14 +263,6 @@ public class BusinessFlowDocumentEntity extends BaseJpaEntity {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
     }
 
     public Date getUpdatedAt() {
