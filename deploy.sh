@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ###############################################################################
-# OpenDeepWiki Linux 部署脚本
+# KoalaWiki Linux 部署脚本
 #
 # 功能：编译、打包、停止旧进程、启动新进程
 # 使用：./deploy.sh [start|stop|restart|build]
@@ -20,8 +20,8 @@ NC='\033[0m' # No Color
 
 # 配置变量
 APP_NAME="koalawiki"
-JAR_NAME="koalawiki-web-0.1.0-SNAPSHOT.jar"
-JAR_PATH="koalawiki-web/target/${JAR_NAME}"
+JAR_NAME="koalawiki-0.1.0-SNAPSHOT.jar"
+JAR_PATH="target/${JAR_NAME}"
 PID_FILE="/var/run/${APP_NAME}.pid"
 LOG_DIR="logs"
 LOG_FILE="${LOG_DIR}/koalawiki.log"
@@ -55,15 +55,11 @@ check_environment() {
     check_command mvn
 
     # 检查 Java 版本
-    # 支持 1.8.x 和 11+ 两种版本号格式
     JAVA_VERSION_STRING=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')
 
-    # 判断是 1.x 还是新版本号格式
     if [[ $JAVA_VERSION_STRING =~ ^1\. ]]; then
-        # 1.8.x 格式，提取 1.8 中的 8
         JAVA_VERSION=$(echo $JAVA_VERSION_STRING | awk -F '.' '{print $2}')
     else
-        # 11+ 格式，提取主版本号
         JAVA_VERSION=$(echo $JAVA_VERSION_STRING | awk -F '.' '{print $1}')
     fi
 
@@ -87,11 +83,9 @@ create_directories() {
 build() {
     info "开始编译打包..."
 
-    # 清理旧的编译产物
     info "清理旧的编译产物..."
     mvn clean -q
 
-    # 编译打包（跳过测试）
     info "执行 Maven 打包（跳过测试）..."
     mvn package -DskipTests -q
 
@@ -106,17 +100,14 @@ build() {
 
 # 获取应用进程ID
 get_pid() {
-    # 方式1：从 PID 文件读取
     if [ -f "${PID_FILE}" ]; then
         PID=$(cat ${PID_FILE})
-        # 验证进程是否存在
         if ps -p ${PID} > /dev/null 2>&1; then
             echo ${PID}
             return
         fi
     fi
 
-    # 方式2：通过 JAR 名称查找
     PID=$(ps aux | grep "${JAR_NAME}" | grep -v grep | awk '{print $2}')
     echo ${PID}
 }
@@ -133,12 +124,9 @@ stop() {
     fi
 
     info "找到进程 PID: ${PID}"
-
-    # 优雅停止（发送 TERM 信号）
     info "发送停止信号..."
     kill -15 ${PID}
 
-    # 等待进程退出（最多30秒）
     WAIT_TIME=0
     MAX_WAIT=30
     while ps -p ${PID} > /dev/null 2>&1; do
@@ -153,7 +141,6 @@ stop() {
     done
     echo ""
 
-    # 清理 PID 文件
     if [ -f "${PID_FILE}" ]; then
         rm -f ${PID_FILE}
     fi
@@ -165,21 +152,18 @@ stop() {
 start() {
     info "启动应用..."
 
-    # 检查是否已经运行
     PID=$(get_pid)
     if [ -n "${PID}" ]; then
         error "应用已在运行，PID: ${PID}"
         exit 1
     fi
 
-    # 检查 JAR 文件是否存在
     if [ ! -f "${JAR_PATH}" ]; then
         error "JAR 文件不存在: ${JAR_PATH}"
         error "请先执行编译: ./deploy.sh build"
         exit 1
     fi
 
-    # 启动应用（后台运行）
     info "启动 Spring Boot 应用..."
     info "配置文件: ${SPRING_PROFILES_ACTIVE}"
     info "日志文件: ${LOG_FILE}"
@@ -195,11 +179,9 @@ start() {
     NEW_PID=$!
     echo ${NEW_PID} > ${PID_FILE}
 
-    # 等待启动
     info "等待应用启动..."
     sleep 3
 
-    # 验证进程是否存在
     if ps -p ${NEW_PID} > /dev/null 2>&1; then
         info "应用启动成功，PID: ${NEW_PID}"
         info "查看日志: tail -f ${LOG_FILE}"
@@ -259,7 +241,7 @@ tail_logs() {
 # 显示帮助信息
 usage() {
     cat << EOF
-OpenDeepWiki Linux 部署脚本
+KoalaWiki Linux 部署脚本
 
 使用方法:
     $0 <command>
@@ -303,7 +285,6 @@ deploy() {
     create_directories
     build
 
-    # 检查是否有旧进程
     PID=$(get_pid)
     if [ -n "${PID}" ]; then
         stop
@@ -320,13 +301,11 @@ deploy() {
 
 # 主函数
 main() {
-    # 检查是否有参数
     if [ $# -eq 0 ]; then
         usage
         exit 1
     fi
 
-    # 解析命令
     case "$1" in
         build)
             check_environment
