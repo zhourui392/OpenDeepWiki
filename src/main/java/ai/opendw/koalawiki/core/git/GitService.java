@@ -481,7 +481,6 @@ public class GitService {
 
         @Override
         public void update(int completed) {
-            log.debug("Progress update: {} completed", completed);
         }
 
         @Override
