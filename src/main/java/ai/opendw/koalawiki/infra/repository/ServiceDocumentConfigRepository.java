@@ -27,4 +27,6 @@ public interface ServiceDocumentConfigRepository extends JpaRepository<ServiceDo
     List<ServiceDocumentConfigEntity> findByEnabled(Boolean enabled);
 
     List<ServiceDocumentConfigEntity> findByDomainIdAndEnabled(String domainId, Boolean enabled);
+
+    Optional<ServiceDocumentConfigEntity> findByDomainIdAndServiceId(String domainId, String serviceId);
 }

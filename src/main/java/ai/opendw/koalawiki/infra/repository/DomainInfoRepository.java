@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 领域仓储
@@ -16,4 +17,6 @@ import java.util.List;
 public interface DomainInfoRepository extends JpaRepository<DomainInfoEntity, String> {
 
     List<DomainInfoEntity> findByWarehouseId(String warehouseId);
+
+    Optional<DomainInfoEntity> findByCode(String code);
 }
